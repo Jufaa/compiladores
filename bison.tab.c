@@ -71,21 +71,25 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 extern int yylex();
 extern FILE *yyin;
 void yyerror(char *s);
 
 
 
-typedef struct Nodo{
+typedef struct{
     char *tipo;
-    int valor;
-    struct Nodo *izq;
-    struct Nodo *der;
-} Nodo;
+    char *nombre;
+}TS;
+int CANTSimbolos = 0;
+TS tablaSimbolos[100];
+void agregarSimbolo(char *tipo, char *nombre);
+char *buscarTipo(char *nombre);
 
 
-#line 89 "bison.tab.c"
+
+#line 93 "bison.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -116,30 +120,32 @@ enum yysymbol_kind_t
   YYSYMBOL_YYEOF = 0,                      /* "end of file"  */
   YYSYMBOL_YYerror = 1,                    /* error  */
   YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
-  YYSYMBOL_TNUM = 3,                       /* TNUM  */
-  YYSYMBOL_TINT = 4,                       /* TINT  */
-  YYSYMBOL_TBOOL = 5,                      /* TBOOL  */
-  YYSYMBOL_TVOID = 6,                      /* TVOID  */
-  YYSYMBOL_TTRUE = 7,                      /* TTRUE  */
-  YYSYMBOL_TFALSE = 8,                     /* TFALSE  */
-  YYSYMBOL_TMAIN = 9,                      /* TMAIN  */
-  YYSYMBOL_TRETURN = 10,                   /* TRETURN  */
-  YYSYMBOL_TASIGNACION = 11,               /* TASIGNACION  */
-  YYSYMBOL_TSUMA = 12,                     /* TSUMA  */
-  YYSYMBOL_TMULTIPLICACION = 13,           /* TMULTIPLICACION  */
-  YYSYMBOL_TPA = 14,                       /* TPA  */
-  YYSYMBOL_TPC = 15,                       /* TPC  */
-  YYSYMBOL_TLLAVEA = 16,                   /* TLLAVEA  */
-  YYSYMBOL_TLLAVEC = 17,                   /* TLLAVEC  */
-  YYSYMBOL_TPUNTOCOMA = 18,                /* TPUNTOCOMA  */
-  YYSYMBOL_TCOMA = 19,                     /* TCOMA  */
-  YYSYMBOL_TID = 20,                       /* TID  */
+  YYSYMBOL_TINT = 3,                       /* TINT  */
+  YYSYMBOL_TBOOL = 4,                      /* TBOOL  */
+  YYSYMBOL_TVOID = 5,                      /* TVOID  */
+  YYSYMBOL_TTRUE = 6,                      /* TTRUE  */
+  YYSYMBOL_TFALSE = 7,                     /* TFALSE  */
+  YYSYMBOL_TMAIN = 8,                      /* TMAIN  */
+  YYSYMBOL_TRETURN = 9,                    /* TRETURN  */
+  YYSYMBOL_TASIGNACION = 10,               /* TASIGNACION  */
+  YYSYMBOL_TSUMA = 11,                     /* TSUMA  */
+  YYSYMBOL_TMULTIPLICACION = 12,           /* TMULTIPLICACION  */
+  YYSYMBOL_TPA = 13,                       /* TPA  */
+  YYSYMBOL_TPC = 14,                       /* TPC  */
+  YYSYMBOL_TLLAVEA = 15,                   /* TLLAVEA  */
+  YYSYMBOL_TLLAVEC = 16,                   /* TLLAVEC  */
+  YYSYMBOL_TPUNTOCOMA = 17,                /* TPUNTOCOMA  */
+  YYSYMBOL_TCOMA = 18,                     /* TCOMA  */
+  YYSYMBOL_TID = 19,                       /* TID  */
+  YYSYMBOL_TNUM = 20,                      /* TNUM  */
   YYSYMBOL_TVACIO = 21,                    /* TVACIO  */
   YYSYMBOL_TBLANCO = 22,                   /* TBLANCO  */
   YYSYMBOL_TERROR = 23,                    /* TERROR  */
   YYSYMBOL_YYACCEPT = 24,                  /* $accept  */
   YYSYMBOL_P = 25,                         /* P  */
-  YYSYMBOL_E = 26                          /* E  */
+  YYSYMBOL_E = 26,                         /* E  */
+  YYSYMBOL_DECLARACION = 27,               /* DECLARACION  */
+  YYSYMBOL_ASIGNACION = 28                 /* ASIGNACION  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -465,18 +471,18 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  6
+#define YYFINAL  17
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   15
+#define YYLAST   47
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  24
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  3
+#define YYNNTS  5
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  6
+#define YYNRULES  17
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  13
+#define YYNSTATES  32
 
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   279
@@ -518,16 +524,17 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     4,     5,     6,     7,
-       8,     9,    10,    11,    12,    13,    14,    15,    16,    17,
-      18,    19,    20,     3,    21,     2,    22,    23,     1,     2
+       2,     2,     2,     2,     2,     2,     3,     4,     5,     6,
+       7,     8,     9,    10,    11,    12,    13,    14,    15,    16,
+      17,    18,    19,    20,    21,     2,    22,    23,     1,     2
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    51,    51,    53,    54,    55,    56
+       0,    57,    57,    58,    59,    60,    61,    62,    64,    70,
+      76,    77,    78,    79,    80,    83,    86,    91
 };
 #endif
 
@@ -543,11 +550,11 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "\"end of file\"", "error", "\"invalid token\"", "TNUM", "TINT",
-  "TBOOL", "TVOID", "TTRUE", "TFALSE", "TMAIN", "TRETURN", "TASIGNACION",
-  "TSUMA", "TMULTIPLICACION", "TPA", "TPC", "TLLAVEA", "TLLAVEC",
-  "TPUNTOCOMA", "TCOMA", "TID", "TVACIO", "TBLANCO", "TERROR", "$accept",
-  "P", "E", YY_NULLPTR
+  "\"end of file\"", "error", "\"invalid token\"", "TINT", "TBOOL",
+  "TVOID", "TTRUE", "TFALSE", "TMAIN", "TRETURN", "TASIGNACION", "TSUMA",
+  "TMULTIPLICACION", "TPA", "TPC", "TLLAVEA", "TLLAVEC", "TPUNTOCOMA",
+  "TCOMA", "TID", "TNUM", "TVACIO", "TBLANCO", "TERROR", "$accept", "P",
+  "E", "DECLARACION", "ASIGNACION", YY_NULLPTR
 };
 
 static const char *
@@ -557,7 +564,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-12)
+#define YYPACT_NINF (-15)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -571,8 +578,10 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -3,   -12,    -3,     6,   -11,     0,   -12,    -3,    -3,   -12,
-     -12,    -8,    -8
+       5,   -14,    -9,   -15,   -15,     8,     6,   -15,     0,    19,
+     -15,   -15,    12,    20,   -15,    32,     8,   -15,    21,   -15,
+     -15,     8,     8,   -15,   -15,   -15,   -15,    30,   -15,   -10,
+     -10,   -15
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -580,20 +589,22 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     6,     0,     0,     0,     0,     1,     0,     0,     2,
-       5,     3,     4
+       0,     0,     0,    12,    13,     0,    14,    11,     0,     0,
+       5,     6,     0,     0,    14,     0,     0,     1,     0,     2,
+       3,     0,     0,     7,    15,    16,    10,     0,     4,     8,
+       9,    17
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -12,   -12,     1
+     -15,   -15,    18,     9,    14
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     3,     4
+       0,     8,     9,    10,    11
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -601,34 +612,44 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-       1,     7,     8,     5,     7,     8,     6,     9,    11,    12,
-       0,     2,     7,     8,     0,    10
+      17,    21,    22,     1,     2,    12,     3,     4,     1,     2,
+      13,     3,     4,     5,     3,     4,    16,    19,     5,     6,
+       7,     5,    20,    15,     6,     7,    18,    14,     7,    24,
+      21,    22,    21,    22,    27,     0,    23,    25,    28,    29,
+      30,    21,    22,    21,    22,     0,    26,    31
 };
 
 static const yytype_int8 yycheck[] =
 {
-       3,    12,    13,     2,    12,    13,     0,    18,     7,     8,
-      -1,    14,    12,    13,    -1,    15
+       0,    11,    12,     3,     4,    19,     6,     7,     3,     4,
+      19,     6,     7,    13,     6,     7,    10,     8,    13,    19,
+      20,    13,     8,     5,    19,    20,     8,    19,    20,    17,
+      11,    12,    11,    12,    16,    -1,    17,    17,    17,    21,
+      22,    11,    12,    11,    12,    -1,    14,    17
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     3,    14,    25,    26,    26,     0,    12,    13,    18,
-      15,    26,    26
+       0,     3,     4,     6,     7,    13,    19,    20,    25,    26,
+      27,    28,    19,    19,    19,    26,    10,     0,    26,    27,
+      28,    11,    12,    17,    17,    17,    14,    26,    17,    26,
+      26,    17
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    24,    25,    26,    26,    26,    26
+       0,    24,    25,    25,    25,    25,    25,    25,    26,    26,
+      26,    26,    26,    26,    26,    27,    27,    28
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     2,     3,     3,     3,     1
+       0,     2,     2,     2,     3,     1,     1,     2,     3,     3,
+       3,     1,     1,     1,     1,     3,     3,     4
 };
 
 
@@ -1091,38 +1112,98 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 2: /* P: E TPUNTOCOMA  */
-#line 51 "bison.y"
-                { printf("Expresion valida\n"); imprimirAST((yyvsp[-1].nodo), 0); }
-#line 1098 "bison.tab.c"
+  case 4: /* P: P E TPUNTOCOMA  */
+#line 59 "bison.y"
+                   { printf("Expresion: %s\n", (yyvsp[-1].cadena)); }
+#line 1119 "bison.tab.c"
     break;
 
-  case 3: /* E: E TSUMA E  */
-#line 53 "bison.y"
-                    { (yyval.nodo) = (yyvsp[-2].nodo) + (yyvsp[0].nodo); printf("Suma detectada\n"); imprimirAST(crearNodo("SUMA", 0, (yyvsp[-2].nodo), (yyvsp[0].nodo)), 0); }
-#line 1104 "bison.tab.c"
+  case 7: /* P: E TPUNTOCOMA  */
+#line 62 "bison.y"
+                   { printf("Expresion: %s\n", (yyvsp[-1].cadena)); }
+#line 1125 "bison.tab.c"
     break;
 
-  case 4: /* E: E TMULTIPLICACION E  */
-#line 54 "bison.y"
-                        { (yyval.nodo) = (yyvsp[-2].nodo) * (yyvsp[0].nodo); printf("Multiplicación detectada\n"); imprimirAST(crearNodo("MULT", 0, (yyvsp[-2].nodo), (yyvsp[0].nodo)), 0); }
-#line 1110 "bison.tab.c"
+  case 8: /* E: E TSUMA E  */
+#line 65 "bison.y"
+  {
+      if (strcmp((yyvsp[-2].cadena), "int") != 0 || strcmp((yyvsp[0].cadena), "int") != 0)
+          printf("Error: '+' solo funciona con int\n");
+      (yyval.cadena) = "int";
+  }
+#line 1135 "bison.tab.c"
     break;
 
-  case 5: /* E: TPA E TPC  */
-#line 55 "bison.y"
-                    { (yyval.nodo) = (yyvsp[-1].nodo); printf("Parentesis abierto y cerrado detectado con el numero %d\n ", (yyvsp[-1].nodo)); imprimirAST(crearNodo("PARENTESIS", 0, (yyvsp[-1].nodo), NULL), 0); }
-#line 1116 "bison.tab.c"
+  case 9: /* E: E TMULTIPLICACION E  */
+#line 71 "bison.y"
+  {
+      if (strcmp((yyvsp[-2].cadena), "int") != 0 || strcmp((yyvsp[0].cadena), "int") != 0)
+          printf("Error: '*' solo funciona con int\n");
+      (yyval.cadena) = "int";
+  }
+#line 1145 "bison.tab.c"
     break;
 
-  case 6: /* E: TNUM  */
-#line 56 "bison.y"
-                    { (yyval.nodo) = (yyvsp[0].numero); printf("Numero: %d\n", (yyvsp[0].numero)); imprimirAST(crearNodo("NUM", (yyvsp[0].numero), NULL, NULL), 0); }
-#line 1122 "bison.tab.c"
+  case 10: /* E: TPA E TPC  */
+#line 76 "bison.y"
+                { (yyval.cadena) = (yyvsp[-1].cadena); }
+#line 1151 "bison.tab.c"
+    break;
+
+  case 11: /* E: TNUM  */
+#line 77 "bison.y"
+                 { (yyval.cadena) = "int"; }
+#line 1157 "bison.tab.c"
+    break;
+
+  case 12: /* E: TTRUE  */
+#line 78 "bison.y"
+                 { (yyval.cadena) = "bool"; }
+#line 1163 "bison.tab.c"
+    break;
+
+  case 13: /* E: TFALSE  */
+#line 79 "bison.y"
+                 { (yyval.cadena) = "bool"; }
+#line 1169 "bison.tab.c"
+    break;
+
+  case 14: /* E: TID  */
+#line 80 "bison.y"
+                 { (yyval.cadena) = buscarTipo((yyvsp[0].cadena)); }
+#line 1175 "bison.tab.c"
+    break;
+
+  case 15: /* DECLARACION: TINT TID TPUNTOCOMA  */
+#line 83 "bison.y"
+                                {
+    agregarSimbolo("int", (yyvsp[-1].cadena));
+}
+#line 1183 "bison.tab.c"
+    break;
+
+  case 16: /* DECLARACION: TBOOL TID TPUNTOCOMA  */
+#line 86 "bison.y"
+                          {
+    agregarSimbolo("bool", (yyvsp[-1].cadena));
+}
+#line 1191 "bison.tab.c"
+    break;
+
+  case 17: /* ASIGNACION: TID TASIGNACION E TPUNTOCOMA  */
+#line 92 "bison.y"
+  {
+      char *tipoVar = buscarTipo((yyvsp[-3].cadena));
+      if (!tipoVar)
+          printf("Error: '%s' no declarada\n", (yyvsp[-3].cadena));
+      else if (strcmp(tipoVar, (yyvsp[-1].cadena)) != 0)
+          printf("Error: tipo %s esperado, %s recibido\n", tipoVar, (yyvsp[-1].cadena));
+  }
+#line 1203 "bison.tab.c"
     break;
 
 
-#line 1126 "bison.tab.c"
+#line 1207 "bison.tab.c"
 
       default: break;
     }
@@ -1315,40 +1396,28 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 59 "bison.y"
+#line 101 "bison.y"
 
 
 void yyerror(char *s) {
     fprintf(stderr, "Error: %s\n", s);
 }
 
-Nodo *crearNodo(char *tipo, int valor, Nodo *izq, Nodo *der) {
-    Nodo *n = malloc(sizeof(Nodo));
-
-    n->tipo = tipo;
-    n->valor = valor;
-    n->izq = izq;
-    n->der = der;
-
-    return n;
+void agregarSimbolo(char *tipo, char *nombre) {
+    tablaSimbolos[CANTSimbolos].nombre = nombre;
+    tablaSimbolos[CANTSimbolos].tipo = tipo;
+    CANTSimbolos++;
 }
 
-
-void imprimirAST(Nodo *n, int nivel) {
-    if (n == NULL)
-        return;
-
-    for (int i = 0; i < nivel; i++)
-        printf("  ");
-
-    if (n->tipo == "NUM")
-        printf("%d\n", n->valor);
-    else
-        printf("%s\n", n->tipo);
-
-    imprimirAST(n->izq, nivel + 1);
-    imprimirAST(n->der, nivel + 1);
+char *buscarTipo(char *nombre) {
+    for (int i = 0; i < CANTSimbolos; i++) {
+        if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
+            return tablaSimbolos[i].tipo;
+        }
+    }
+    return NULL;
 }
+
 
 int main(int argc, char **argv) {
     ++argv; --argc;

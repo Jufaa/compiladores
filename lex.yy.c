@@ -473,32 +473,9 @@ char *yytext;
 #line 2 "flex.l"
 #include <stdio.h>
 #include <stdlib.h>
-extern int yylval;
-
-#define TINT        256
-#define TBOOL       257
-#define TVOID       258
-#define TTRUE       259
-#define TFALSE      260
-#define TMAIN       261
-#define TRETURN     262
-#define TASIGNACION 263
-#define TSUMA       264
-#define TMULTIPLICACION 265
-#define TPA         266
-#define TPC         267
-#define TLLAVEA     268
-#define TLLAVEC     269
-#define TPUNTOCOMA  270
-#define TCOMA       271
-#define TID         272
-#define TNUM        273
-#define TVACIO      274
-#define TSALTO      275
-#define TBLANCO     276
-#define TERROR      277
-#line 500 "lex.yy.c"
-#line 501 "lex.yy.c"
+#include "bison.tab.h"
+#line 477 "lex.yy.c"
+#line 478 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -715,9 +692,9 @@ YY_DECL
 		}
 
 	{
-#line 31 "flex.l"
+#line 8 "flex.l"
 
-#line 720 "lex.yy.c"
+#line 697 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -776,118 +753,115 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 32 "flex.l"
+#line 9 "flex.l"
 { return TINT; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 33 "flex.l"
+#line 10 "flex.l"
 { return TBOOL; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 34 "flex.l"
+#line 11 "flex.l"
 { return TVOID; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 35 "flex.l"
+#line 12 "flex.l"
 { return TTRUE; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 36 "flex.l"
+#line 13 "flex.l"
 { return TFALSE; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 37 "flex.l"
+#line 14 "flex.l"
 { return TMAIN; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 38 "flex.l"
+#line 15 "flex.l"
 { return TRETURN; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 39 "flex.l"
+#line 16 "flex.l"
 { return TASIGNACION; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 40 "flex.l"
+#line 17 "flex.l"
 { return TSUMA; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 41 "flex.l"
+#line 18 "flex.l"
 { return TMULTIPLICACION; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 42 "flex.l"
+#line 19 "flex.l"
 { return TPA; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 43 "flex.l"
+#line 20 "flex.l"
 { return TPC; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 44 "flex.l"
+#line 21 "flex.l"
 { return TLLAVEA; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 45 "flex.l"
+#line 22 "flex.l"
 { return TLLAVEC; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 46 "flex.l"
+#line 23 "flex.l"
 { return TPUNTOCOMA; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 47 "flex.l"
+#line 24 "flex.l"
 { return TCOMA; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 48 "flex.l"
-{ return TID; }
+#line 25 "flex.l"
+{ yylval.cadena = strdup(yytext); return TID; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 49 "flex.l"
-{
-    yylval = atoi(yytext);
-    return TNUM;
-}
+#line 26 "flex.l"
+{yylval.numero = atoi(yytext); return TNUM;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 53 "flex.l"
-{ return TVACIO; }         
+#line 27 "flex.l"
+{ }         
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 54 "flex.l"
-{ return TBLANCO; }
+#line 28 "flex.l"
+{ }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 55 "flex.l"
-{ return TERROR; }
+#line 29 "flex.l"
+{  }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 57 "flex.l"
+#line 31 "flex.l"
 ECHO;
 	YY_BREAK
-#line 890 "lex.yy.c"
+#line 864 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1892,6 +1866,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 57 "flex.l"
+#line 31 "flex.l"
 
 

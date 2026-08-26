@@ -54,7 +54,6 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 278,                 /* error  */
     YYUNDEF = 279,                 /* "invalid token"  */
-    TNUM = 273,                    /* TNUM  */
     TINT = 256,                    /* TINT  */
     TBOOL = 257,                   /* TBOOL  */
     TVOID = 258,                   /* TVOID  */
@@ -72,6 +71,7 @@ extern int yydebug;
     TPUNTOCOMA = 270,              /* TPUNTOCOMA  */
     TCOMA = 271,                   /* TCOMA  */
     TID = 272,                     /* TID  */
+    TNUM = 273,                    /* TNUM  */
     TVACIO = 274,                  /* TVACIO  */
     TBLANCO = 276,                 /* TBLANCO  */
     TERROR = 277                   /* TERROR  */
@@ -83,10 +83,10 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 19 "bison.y"
+#line 24 "bison.y"
 
     int numero;
-    Nodo *nodo;
+    char *cadena;
 
 #line 92 "bison.tab.h"
 

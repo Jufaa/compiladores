@@ -1,0 +1,1 @@
+type<numero> TNUM es qe le decis a bison $1.numero xq es un puntero

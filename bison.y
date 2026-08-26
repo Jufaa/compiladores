@@ -2,28 +2,33 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 extern int yylex();
 extern FILE *yyin;
 void yyerror(char *s);
 
 
 
-typedef struct Nodo{
+typedef struct{
     char *tipo;
-    int valor;
-    struct Nodo *izq;
-    struct Nodo *der;
-} Nodo;
+    char *nombre;
+}TS;
+
+int CANTSimbolos = 0;
+TS tablaSimbolos[100];
+void agregarSimbolo(char *tipo, char *nombre);
+char *buscarTipo(char *nombre);
+
 
 %}
+
 %union {
     int numero;
-    Nodo *nodo;
+    char *cadena;
 }
 
-%token <numero> TNUM
 
-%type <nodo> E
+%type <cadena> E
 
 %token TINT        256
 %token TBOOL       257
@@ -41,54 +46,69 @@ typedef struct Nodo{
 %token TLLAVEC     269
 %token TPUNTOCOMA  270
 %token TCOMA       271
-%token TID         272
-%token TNUM        273
+%token <cadena> TID         272
+%token <numero> TNUM        273   
 %token TVACIO      274
 %token TBLANCO     276
 %token TERROR      277
+
 %%
 
-P: E TPUNTOCOMA { printf("Expresion valida\n"); imprimirAST($1, 0); }
- ;
-E: E TSUMA E        { $$ = $1 + $3; printf("Suma detectada\n"); imprimirAST(crearNodo("SUMA", 0, $1, $3), 0); }
- | E TMULTIPLICACION E  { $$ = $1 * $3; printf("Multiplicación detectada\n"); imprimirAST(crearNodo("MULT", 0, $1, $3), 0); }
- | TPA E TPC        { $$ = $2; printf("Parentesis abierto y cerrado detectado con el numero %d\n ", $2); imprimirAST(crearNodo("PARENTESIS", 0, $2, NULL), 0); }
- | TNUM             { $$ = $1; printf("Numero: %d\n", $1); imprimirAST(crearNodo("NUM", $1, NULL, NULL), 0); }
- ;
 
+    P: P DECLARACION
+     | P ASIGNACION
+     | P E TPUNTOCOMA  { printf("Expresion: %s\n", $2); }
+     | DECLARACION
+     | ASIGNACION
+     | E TPUNTOCOMA    { printf("Expresion: %s\n", $1); } ;
+    E: E TSUMA E {
+        if (strcmp($1, "int") != 0 || strcmp($3, "int") != 0)
+            printf("Error: '+' solo funciona con int\n");
+        $$ = "int";
+    }
+        | E TMULTIPLICACION E {
+            if (strcmp($1, "int") != 0 || strcmp($3, "int") != 0)
+                printf("Error: '*' solo funciona con int\n");
+            $$ = "int";
+        }
+        | TPA E TPC   { $$ = $2; }
+        | TNUM         { $$ = "int"; }
+        | TTRUE        { $$ = "bool"; }
+        | TFALSE       { $$ = "bool"; }
+        | TID          { $$ = buscarTipo($1); };
+
+    DECLARACION: TINT TID TPUNTOCOMA{agregarSimbolo("int", $2);}
+        | TBOOL TID TPUNTOCOMA{agregarSimbolo("bool", $2);};
+
+    ASIGNACION: TID TASIGNACION E TPUNTOCOMA
+    {
+      char *tipoVar = buscarTipo($1);
+      if (!tipoVar)
+          printf("Error: '%s' no declarada\n", $1);
+      else if (strcmp(tipoVar, $3) != 0)
+          printf("Error: tipo %s esperado, %s recibido\n", tipoVar, $3);
+    };
 %%
 
 void yyerror(char *s) {
     fprintf(stderr, "Error: %s\n", s);
 }
 
-Nodo *crearNodo(char *tipo, int valor, Nodo *izq, Nodo *der) {
-    Nodo *n = malloc(sizeof(Nodo));
-
-    n->tipo = tipo;
-    n->valor = valor;
-    n->izq = izq;
-    n->der = der;
-
-    return n;
+void agregarSimbolo(char *tipo, char *nombre) {
+    tablaSimbolos[CANTSimbolos].nombre = nombre;
+    tablaSimbolos[CANTSimbolos].tipo = tipo;
+    CANTSimbolos++;
 }
 
-
-void imprimirAST(Nodo *n, int nivel) {
-    if (n == NULL)
-        return;
-
-    for (int i = 0; i < nivel; i++)
-        printf("  ");
-
-    if (n->tipo == "NUM")
-        printf("%d\n", n->valor);
-    else
-        printf("%s\n", n->tipo);
-
-    imprimirAST(n->izq, nivel + 1);
-    imprimirAST(n->der, nivel + 1);
+char *buscarTipo(char *nombre) {
+    for (int i = 0; i < CANTSimbolos; i++) {
+        if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
+            return tablaSimbolos[i].tipo;
+        }
+    }
+    return NULL;
 }
+
 
 int main(int argc, char **argv) {
     ++argv; --argc;

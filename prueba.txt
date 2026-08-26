@@ -1,1 +1,32 @@
-2+3*4;
+int a;
+int b;
+bool c;
+bool d;
+
+a = 10;
+b = 5;
+c = true;
+d = false;
+a = 5 + 3;
+b = 2 * 4;
+a = (3 + 2) * 4;
+
+10 + 5;
+3 * 7;
+(2 + 3) * 4;
+true;
+false;
+
+a + b;
+a * b;
+
+a = true;
+b = false;
+c = 5;
+d = 10;
+
+true + false;
+true * 3;
+c + d;
+
+z = 5;
