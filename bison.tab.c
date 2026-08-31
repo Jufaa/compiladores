@@ -67,8 +67,10 @@
 
 
 /* First part of user prologue.  */
-#line 2 "bison.y"
+#line 25 "bison.y"
 
+/* SYSTEM INCLUDES — emitted before bison.tab.h, so the types above
+   are NOT visible here yet. Only self-contained declarations. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,20 +78,7 @@ extern int yylex();
 extern FILE *yyin;
 void yyerror(char *s);
 
-
-
-typedef struct{
-    char *tipo;
-    char *nombre;
-}TS;
-int CANTSimbolos = 0;
-TS tablaSimbolos[100];
-void agregarSimbolo(char *tipo, char *nombre);
-char *buscarTipo(char *nombre);
-
-
-
-#line 93 "bison.tab.c"
+#line 82 "bison.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -151,6 +140,23 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 
 
+/* Unqualified %code blocks.  */
+#line 36 "bison.y"
+
+/* GLOBALS AND PROTOTYPES — emitted after bison.tab.h, so the types
+   are available. Definitions must stay here, never in the header. */
+
+int CANTSimbolos = 0;
+TS tablaSimbolos[100];
+
+void agregarSimbolo(enum TipoDato tipo, char *nombre);
+enum TipoDato buscarVariable(char *nombre);
+
+Nodo *crearNodo(enum TipoNodo tipo, int valor, Nodo *izq, Nodo *der);
+void imprimirArbol(Nodo *nodo, int nivel);
+
+
+#line 160 "bison.tab.c"
 
 #ifdef short
 # undef short
@@ -533,8 +539,8 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    57,    57,    58,    59,    60,    61,    62,    64,    70,
-      76,    77,    78,    79,    80,    83,    86,    91
+       0,    87,    87,    88,    89,    90,    91,    92,    93,   101,
+     109,   110,   111,   112,   113,   115,   116,   118
 };
 #endif
 
@@ -1113,97 +1119,99 @@ yyreduce:
   switch (yyn)
     {
   case 4: /* P: P E TPUNTOCOMA  */
-#line 59 "bison.y"
-                   { printf("Expresion: %s\n", (yyvsp[-1].cadena)); }
-#line 1119 "bison.tab.c"
-    break;
-
-  case 7: /* P: E TPUNTOCOMA  */
-#line 62 "bison.y"
-                   { printf("Expresion: %s\n", (yyvsp[-1].cadena)); }
+#line 89 "bison.y"
+                       { printf("Expresion: tipo=%d valor=%d\n", (yyvsp[-1].bloque).tipo, (yyvsp[-1].bloque).valor); }
 #line 1125 "bison.tab.c"
     break;
 
+  case 7: /* P: E TPUNTOCOMA  */
+#line 92 "bison.y"
+                       { printf("Expresion: tipo=%d valor=%d\n", (yyvsp[-1].bloque).tipo, (yyvsp[-1].bloque).valor); }
+#line 1131 "bison.tab.c"
+    break;
+
   case 8: /* E: E TSUMA E  */
-#line 65 "bison.y"
-  {
-      if (strcmp((yyvsp[-2].cadena), "int") != 0 || strcmp((yyvsp[0].cadena), "int") != 0)
-          printf("Error: '+' solo funciona con int\n");
-      (yyval.cadena) = "int";
-  }
-#line 1135 "bison.tab.c"
+#line 93 "bison.y"
+                 {
+        if ((yyvsp[-2].bloque).tipo == T_INT && (yyvsp[0].bloque).tipo == T_INT) {
+           (yyval.bloque).tipo = T_INT; (yyval.bloque).valor = (yyvsp[-2].bloque).valor + (yyvsp[0].bloque).valor; 
+        } else {
+            printf("Error: '+' solo funciona con int\n");
+            (yyval.bloque).tipo = T_ERROR; (yyval.bloque).valor = 0;
+        }
+    }
+#line 1144 "bison.tab.c"
     break;
 
   case 9: /* E: E TMULTIPLICACION E  */
-#line 71 "bison.y"
-  {
-      if (strcmp((yyvsp[-2].cadena), "int") != 0 || strcmp((yyvsp[0].cadena), "int") != 0)
-          printf("Error: '*' solo funciona con int\n");
-      (yyval.cadena) = "int";
-  }
-#line 1145 "bison.tab.c"
-    break;
-
-  case 10: /* E: TPA E TPC  */
-#line 76 "bison.y"
-                { (yyval.cadena) = (yyvsp[-1].cadena); }
-#line 1151 "bison.tab.c"
-    break;
-
-  case 11: /* E: TNUM  */
-#line 77 "bison.y"
-                 { (yyval.cadena) = "int"; }
+#line 101 "bison.y"
+                              {
+            if ((yyvsp[-2].bloque).tipo == T_INT && (yyvsp[0].bloque).tipo == T_INT) {
+                (yyval.bloque).tipo = T_INT; (yyval.bloque).valor = (yyvsp[-2].bloque).valor * (yyvsp[0].bloque).valor;  
+            } else {
+                printf("Error: '*' solo funciona con int\n");
+                (yyval.bloque).tipo = T_ERROR; (yyval.bloque).valor = 0;
+            }
+        }
 #line 1157 "bison.tab.c"
     break;
 
-  case 12: /* E: TTRUE  */
-#line 78 "bison.y"
-                 { (yyval.cadena) = "bool"; }
+  case 10: /* E: TPA E TPC  */
+#line 109 "bison.y"
+                      { (yyval.bloque) = (yyvsp[-1].bloque); }
 #line 1163 "bison.tab.c"
     break;
 
-  case 13: /* E: TFALSE  */
-#line 79 "bison.y"
-                 { (yyval.cadena) = "bool"; }
+  case 11: /* E: TNUM  */
+#line 110 "bison.y"
+                       { (yyval.bloque).tipo = T_INT; (yyval.bloque).valor = (yyvsp[0].bloque).valor; }
 #line 1169 "bison.tab.c"
     break;
 
-  case 14: /* E: TID  */
-#line 80 "bison.y"
-                 { (yyval.cadena) = buscarTipo((yyvsp[0].cadena)); }
+  case 12: /* E: TTRUE  */
+#line 111 "bison.y"
+                       { (yyval.bloque).tipo = T_BOOL; (yyval.bloque).valor = 1; }
 #line 1175 "bison.tab.c"
     break;
 
+  case 13: /* E: TFALSE  */
+#line 112 "bison.y"
+                       { (yyval.bloque).tipo = T_BOOL; (yyval.bloque).valor = 0; }
+#line 1181 "bison.tab.c"
+    break;
+
+  case 14: /* E: TID  */
+#line 113 "bison.y"
+                       { (yyval.bloque).tipo = buscarVariable((yyvsp[0].bloque).cadena); (yyval.bloque).valor=0; }
+#line 1187 "bison.tab.c"
+    break;
+
   case 15: /* DECLARACION: TINT TID TPUNTOCOMA  */
-#line 83 "bison.y"
-                                {
-    agregarSimbolo("int", (yyvsp[-1].cadena));
-}
-#line 1183 "bison.tab.c"
+#line 115 "bison.y"
+                                    {agregarSimbolo(T_INT, (yyvsp[-1].bloque).cadena);}
+#line 1193 "bison.tab.c"
     break;
 
   case 16: /* DECLARACION: TBOOL TID TPUNTOCOMA  */
-#line 86 "bison.y"
-                          {
-    agregarSimbolo("bool", (yyvsp[-1].cadena));
-}
-#line 1191 "bison.tab.c"
+#line 116 "bison.y"
+                              {agregarSimbolo(T_BOOL, (yyvsp[-1].bloque).cadena);}
+#line 1199 "bison.tab.c"
     break;
 
   case 17: /* ASIGNACION: TID TASIGNACION E TPUNTOCOMA  */
-#line 92 "bison.y"
-  {
-      char *tipoVar = buscarTipo((yyvsp[-3].cadena));
-      if (!tipoVar)
-          printf("Error: '%s' no declarada\n", (yyvsp[-3].cadena));
-      else if (strcmp(tipoVar, (yyvsp[-1].cadena)) != 0)
-          printf("Error: tipo %s esperado, %s recibido\n", tipoVar, (yyvsp[-1].cadena));
-  }
-#line 1203 "bison.tab.c"
+#line 119 "bison.y"
+    {
+      enum TipoDato tipoVar = buscarVariable((yyvsp[-3].bloque).cadena);
+      if (tipoVar == T_ERROR)
+          printf("Error: '%s' no declarada\n", (yyvsp[-3].bloque).cadena);
+      else if (tipoVar != (yyvsp[-1].bloque).tipo)
+          printf("Error: tipo %d esperado, %d recibido\n", tipoVar, (yyvsp[-1].bloque).tipo);
+    }
+#line 1211 "bison.tab.c"
     break;
 
 
-#line 1207 "bison.tab.c"
+#line 1215 "bison.tab.c"
 
       default: break;
     }
@@ -1396,28 +1404,56 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 101 "bison.y"
+#line 126 "bison.y"
 
 
 void yyerror(char *s) {
     fprintf(stderr, "Error: %s\n", s);
 }
 
-void agregarSimbolo(char *tipo, char *nombre) {
+void agregarSimbolo(enum TipoDato tipo, char *nombre) {
     tablaSimbolos[CANTSimbolos].nombre = nombre;
-    tablaSimbolos[CANTSimbolos].tipo = tipo;
+    tablaSimbolos[CANTSimbolos].tipoDato = tipo;
     CANTSimbolos++;
 }
 
-char *buscarTipo(char *nombre) {
+enum TipoDato buscarVariable(char *nombre) {
     for (int i = 0; i < CANTSimbolos; i++) {
         if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
-            return tablaSimbolos[i].tipo;
+            return tablaSimbolos[i].tipoDato;
         }
     }
-    return NULL;
+    return T_ERROR;
 }
 
+Nodo *crearNodo(enum TipoNodo tipo, int valor, Nodo *izq, Nodo *der) {
+    Nodo *nuevoNodo = (Nodo *)malloc(sizeof(Nodo));
+    nuevoNodo->tipoNodo = tipo;
+    nuevoNodo->valor = valor;
+    nuevoNodo->izq = izq;
+    nuevoNodo->der = der;
+    return nuevoNodo;
+}
+char *nombreNodo(enum TipoNodo t) {
+    switch(t) {
+        case N_NUM: return "NUM";
+        case N_BOOL: return "BOOL";
+        case N_ID: return "ID";
+        case N_SUMA: return "+";
+        case N_MULT: return "*";
+        case N_ASIGN: return "=";
+        case N_DECL: return "DECL";
+        case N_SEQ: return "SEQ";
+        default: return "?";
+    }
+}
+void imprimirArbol(Nodo *nodo, int nivel) {
+    if (nodo == NULL) return;
+    for (int i = 0; i < nivel; i++) printf("  ");
+    printf("%s: %d\n", nombreNodo(nodo->tipoNodo), nodo->valor);
+    imprimirArbol(nodo->izq, nivel + 1);
+    imprimirArbol(nodo->der, nivel + 1);
+}
 
 int main(int argc, char **argv) {
     ++argv; --argc;

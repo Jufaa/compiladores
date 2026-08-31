@@ -1,4 +1,3 @@
-
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,29 +5,50 @@
 extern int yylex();
 extern FILE *yyin;
 void yyerror(char *s);
-
-
+%}
+%{
+enum TipoNodo {N_NUM, N_BOOL, N_ID, N_SUMA, N_MULT, N_ASIGN, N_DECL, N_SEQ, N_BLOQUE};
+enum TipoDato {T_INT, T_BOOL, T_ERROR};
 
 typedef struct{
-    char *tipo;
-    char *nombre;
+    char* nombre;
+    enum TipoDato tipoDato;
+    int valor;
 }TS;
+
+typedef struct Nodo{
+    enum TipoNodo tipoNodo;
+    int indiceEnLaTablaSimbolos;
+    char* nombre;
+    int valor;
+    struct Nodo *izq;
+    struct Nodo *der;
+} Nodo;
+
+
+%{
 
 int CANTSimbolos = 0;
 TS tablaSimbolos[100];
-void agregarSimbolo(char *tipo, char *nombre);
-char *buscarTipo(char *nombre);
 
+void agregarSimbolo(enum TipoDato tipo, char *nombre);
+enum TipoDato buscarVariable(char *nombre);
 
-%}
+Nodo *crearNodo(enum TipoNodo tipo, int valor, Nodo *izq, Nodo *der);
+void imprimirArbol(Nodo *nodo, int nivel);
 
-%union {
-    int numero;
-    char *cadena;
 }
 
+%union {
+    struct {
+        int tipo; // tipo de dato (T_INT, T_BOOL, T_ERROR)
+        int valor;
+        char *cadena;
+        int linea;
+    }bloque;
+}
 
-%type <cadena> E
+%type <bloque> E
 
 %token TINT        256
 %token TBOOL       257
@@ -46,8 +66,8 @@ char *buscarTipo(char *nombre);
 %token TLLAVEC     269
 %token TPUNTOCOMA  270
 %token TCOMA       271
-%token <cadena> TID         272
-%token <numero> TNUM        273   
+%token <bloque> TID         272
+%token <bloque> TNUM        273   
 %token TVACIO      274
 %token TBLANCO     276
 %token TERROR      277
@@ -57,36 +77,42 @@ char *buscarTipo(char *nombre);
 
     P: P DECLARACION
      | P ASIGNACION
-     | P E TPUNTOCOMA  { printf("Expresion: %s\n", $2); }
+     | P E TPUNTOCOMA  { printf("Expresion: tipo=%d valor=%d\n", $2.tipo, $2.valor); }
      | DECLARACION
      | ASIGNACION
-     | E TPUNTOCOMA    { printf("Expresion: %s\n", $1); } ;
+     | E TPUNTOCOMA    { printf("Expresion: tipo=%d valor=%d\n", $1.tipo, $1.valor); } ;
     E: E TSUMA E {
-        if (strcmp($1, "int") != 0 || strcmp($3, "int") != 0)
+        if ($1.tipo == T_INT && $3.tipo == T_INT) {
+           $$.tipo = T_INT; $$.valor = $1.valor + $3.valor; 
+        } else {
             printf("Error: '+' solo funciona con int\n");
-        $$ = "int";
+            $$.tipo = T_ERROR; $$.valor = 0;
+        }
     }
         | E TMULTIPLICACION E {
-            if (strcmp($1, "int") != 0 || strcmp($3, "int") != 0)
+            if ($1.tipo == T_INT && $3.tipo == T_INT) {
+                $$.tipo = T_INT; $$.valor = $1.valor * $3.valor;  
+            } else {
                 printf("Error: '*' solo funciona con int\n");
-            $$ = "int";
+                $$.tipo = T_ERROR; $$.valor = 0;
+            }
         }
         | TPA E TPC   { $$ = $2; }
-        | TNUM         { $$ = "int"; }
-        | TTRUE        { $$ = "bool"; }
-        | TFALSE       { $$ = "bool"; }
-        | TID          { $$ = buscarTipo($1); };
+        | TNUM         { $$.tipo = T_INT; $$.valor = $1.valor; }
+        | TTRUE        { $$.tipo = T_BOOL; $$.valor = 1; }
+        | TFALSE       { $$.tipo = T_BOOL; $$.valor = 0; }
+        | TID          { $$.tipo = buscarVariable($1.cadena); $$.valor=0; };
 
-    DECLARACION: TINT TID TPUNTOCOMA{agregarSimbolo("int", $2);}
-        | TBOOL TID TPUNTOCOMA{agregarSimbolo("bool", $2);};
+    DECLARACION: TINT TID TPUNTOCOMA{agregarSimbolo(T_INT, $2.cadena);}
+        | TBOOL TID TPUNTOCOMA{agregarSimbolo(T_BOOL, $2.cadena);};
 
     ASIGNACION: TID TASIGNACION E TPUNTOCOMA
     {
-      char *tipoVar = buscarTipo($1);
-      if (!tipoVar)
-          printf("Error: '%s' no declarada\n", $1);
-      else if (strcmp(tipoVar, $3) != 0)
-          printf("Error: tipo %s esperado, %s recibido\n", tipoVar, $3);
+      enum TipoDato tipoVar = buscarVariable($1.cadena);
+      if (tipoVar == T_ERROR)
+          printf("Error: '%s' no declarada\n", $1.cadena);
+      else if (tipoVar != $3.tipo)
+          printf("Error: tipo %d esperado, %d recibido\n", tipoVar, $3.tipo);
     };
 %%
 
@@ -94,21 +120,49 @@ void yyerror(char *s) {
     fprintf(stderr, "Error: %s\n", s);
 }
 
-void agregarSimbolo(char *tipo, char *nombre) {
+void agregarSimbolo(enum TipoDato tipo, char *nombre) {
     tablaSimbolos[CANTSimbolos].nombre = nombre;
-    tablaSimbolos[CANTSimbolos].tipo = tipo;
+    tablaSimbolos[CANTSimbolos].tipoDato = tipo;
     CANTSimbolos++;
 }
 
-char *buscarTipo(char *nombre) {
+enum TipoDato buscarVariable(char *nombre) {
     for (int i = 0; i < CANTSimbolos; i++) {
         if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
-            return tablaSimbolos[i].tipo;
+            return tablaSimbolos[i].tipoDato;
         }
     }
-    return NULL;
+    return T_ERROR;
 }
 
+Nodo *crearNodo(enum TipoNodo tipo, int valor, Nodo *izq, Nodo *der) {
+    Nodo *nuevoNodo = (Nodo *)malloc(sizeof(Nodo));
+    nuevoNodo->tipoNodo = tipo;
+    nuevoNodo->valor = valor;
+    nuevoNodo->izq = izq;
+    nuevoNodo->der = der;
+    return nuevoNodo;
+}
+char *nombreNodo(enum TipoNodo t) {
+    switch(t) {
+        case N_NUM: return "NUM";
+        case N_BOOL: return "BOOL";
+        case N_ID: return "ID";
+        case N_SUMA: return "+";
+        case N_MULT: return "*";
+        case N_ASIGN: return "=";
+        case N_DECL: return "DECL";
+        case N_SEQ: return "SEQ";
+        default: return "?";
+    }
+}
+void imprimirArbol(Nodo *nodo, int nivel) {
+    if (nodo == NULL) return;
+    for (int i = 0; i < nivel; i++) printf("  ");
+    printf("%s: %d\n", nombreNodo(nodo->tipoNodo), nodo->valor);
+    imprimirArbol(nodo->izq, nivel + 1);
+    imprimirArbol(nodo->der, nivel + 1);
+}
 
 int main(int argc, char **argv) {
     ++argv; --argc;

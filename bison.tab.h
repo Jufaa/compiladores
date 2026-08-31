@@ -44,6 +44,32 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 1 "bison.y"
+
+
+/* TYPES — copied into bison.tab.c AND bison.tab.h, before %union.
+   This is the only block flex.l can see. */
+
+enum TipoNodo {N_NUM, N_BOOL, N_ID, N_SUMA, N_MULT, N_ASIGN, N_DECL, N_SEQ};
+enum TipoDato {T_INT, T_BOOL, T_ERROR};
+
+typedef struct{
+    char* nombre;
+    enum TipoDato tipoDato;
+    int valor;
+}TS;
+
+typedef struct Nodo{
+    enum TipoNodo tipoNodo;
+    int indiceEnLaTablaSimbolos;
+    int valor;
+    struct Nodo *izq;
+    struct Nodo *der;
+} Nodo;
+
+
+#line 73 "bison.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -83,12 +109,16 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 24 "bison.y"
+#line 51 "bison.y"
 
-    int numero;
-    char *cadena;
+    struct {
+        int tipo; // tipo de dato (T_INT, T_BOOL, T_ERROR)
+        int valor;
+        char *cadena;
+        int linea;
+    }bloque;
 
-#line 92 "bison.tab.h"
+#line 122 "bison.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
