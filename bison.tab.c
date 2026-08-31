@@ -74,6 +74,7 @@
 #include <string.h>
 
 extern int yylex();
+extern int yylineno;
 extern FILE *yyin;
 void yyerror(char *s);
 
@@ -104,7 +105,7 @@ enum TipoDato buscarVariable(char *nombre);
 Nodo *crearNodo(enum TipoNodo tipo, int valor, Nodo *izq, Nodo *der);
 void imprimirArbol(Nodo *nodo, int nivel);
 
-#line 108 "bison.tab.c"
+#line 109 "bison.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -159,8 +160,10 @@ enum yysymbol_kind_t
   YYSYMBOL_YYACCEPT = 24,                  /* $accept  */
   YYSYMBOL_P = 25,                         /* P  */
   YYSYMBOL_E = 26,                         /* E  */
-  YYSYMBOL_DECLARACION = 27,               /* DECLARACION  */
-  YYSYMBOL_ASIGNACION = 28                 /* ASIGNACION  */
+  YYSYMBOL_T = 27,                         /* T  */
+  YYSYMBOL_F = 28,                         /* F  */
+  YYSYMBOL_DECLARACION = 29,               /* DECLARACION  */
+  YYSYMBOL_ASIGNACION = 30                 /* ASIGNACION  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -486,18 +489,18 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  17
+#define YYFINAL  19
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   47
+#define YYLAST   40
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  24
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  5
+#define YYNNTS  7
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  17
+#define YYNRULES  19
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  32
+#define YYNSTATES  34
 
 /* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   279
@@ -548,8 +551,8 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    75,    75,    76,    77,    78,    79,    80,    81,    89,
-      97,    98,    99,   100,   101,   103,   104,   106
+       0,    76,    76,    77,    78,    79,    80,    81,    82,    90,
+      93,   101,   104,   105,   106,   107,   108,   110,   111,   113
 };
 #endif
 
@@ -569,7 +572,7 @@ static const char *const yytname[] =
   "TVOID", "TTRUE", "TFALSE", "TMAIN", "TRETURN", "TASIGNACION", "TSUMA",
   "TMULTIPLICACION", "TPA", "TPC", "TLLAVEA", "TLLAVEC", "TPUNTOCOMA",
   "TCOMA", "TID", "TNUM", "TVACIO", "TBLANCO", "TERROR", "$accept", "P",
-  "E", "DECLARACION", "ASIGNACION", YY_NULLPTR
+  "E", "T", "F", "DECLARACION", "ASIGNACION", YY_NULLPTR
 };
 
 static const char *
@@ -579,7 +582,7 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-15)
+#define YYPACT_NINF (-19)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
@@ -593,10 +596,10 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-       5,   -14,    -9,   -15,   -15,     8,     6,   -15,     0,    19,
-     -15,   -15,    12,    20,   -15,    32,     8,   -15,    21,   -15,
-     -15,     8,     8,   -15,   -15,   -15,   -15,    30,   -15,   -10,
-     -10,   -15
+       5,   -18,    -2,   -19,   -19,     8,    12,   -19,     0,    -1,
+      17,   -19,   -19,   -19,    13,    16,   -19,    -9,     8,   -19,
+      20,   -19,   -19,     8,   -19,     8,   -19,   -19,   -19,    21,
+     -19,    17,   -19,   -19
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -604,22 +607,22 @@ static const yytype_int8 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,     0,    12,    13,     0,    14,    11,     0,     0,
-       5,     6,     0,     0,    14,     0,     0,     1,     0,     2,
-       3,     0,     0,     7,    15,    16,    10,     0,     4,     8,
-       9,    17
+       0,     0,     0,    14,    15,     0,    16,    13,     0,     0,
+       9,    11,     5,     6,     0,     0,    16,     0,     0,     1,
+       0,     2,     3,     0,     7,     0,    17,    18,    12,     0,
+       4,     8,    10,    19
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -15,   -15,    18,     9,    14
+     -19,   -19,    18,    11,    10,    31,    32
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-       0,     8,     9,    10,    11
+       0,     8,     9,    10,    11,    12,    13
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -627,20 +630,20 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int8 yytable[] =
 {
-      17,    21,    22,     1,     2,    12,     3,     4,     1,     2,
-      13,     3,     4,     5,     3,     4,    16,    19,     5,     6,
-       7,     5,    20,    15,     6,     7,    18,    14,     7,    24,
-      21,    22,    21,    22,    27,     0,    23,    25,    28,    29,
-      30,    21,    22,    21,    22,     0,    26,    31
+      19,    14,    23,     1,     2,    28,     3,     4,     1,     2,
+      23,     3,     4,     5,     3,     4,    24,    15,     5,     6,
+       7,     5,    18,    17,     6,     7,    20,    16,     7,    25,
+      26,    23,    23,    27,    31,    32,    29,    30,    33,    21,
+      22
 };
 
 static const yytype_int8 yycheck[] =
 {
-       0,    11,    12,     3,     4,    19,     6,     7,     3,     4,
-      19,     6,     7,    13,     6,     7,    10,     8,    13,    19,
-      20,    13,     8,     5,    19,    20,     8,    19,    20,    17,
-      11,    12,    11,    12,    16,    -1,    17,    17,    17,    21,
-      22,    11,    12,    11,    12,    -1,    14,    17
+       0,    19,    11,     3,     4,    14,     6,     7,     3,     4,
+      11,     6,     7,    13,     6,     7,    17,    19,    13,    19,
+      20,    13,    10,     5,    19,    20,     8,    19,    20,    12,
+      17,    11,    11,    17,    23,    25,    18,    17,    17,     8,
+       8
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
@@ -648,23 +651,23 @@ static const yytype_int8 yycheck[] =
 static const yytype_int8 yystos[] =
 {
        0,     3,     4,     6,     7,    13,    19,    20,    25,    26,
-      27,    28,    19,    19,    19,    26,    10,     0,    26,    27,
-      28,    11,    12,    17,    17,    17,    14,    26,    17,    26,
-      26,    17
+      27,    28,    29,    30,    19,    19,    19,    26,    10,     0,
+      26,    29,    30,    11,    17,    12,    17,    17,    14,    26,
+      17,    27,    28,    17
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
        0,    24,    25,    25,    25,    25,    25,    25,    26,    26,
-      26,    26,    26,    26,    26,    27,    27,    28
+      27,    27,    28,    28,    28,    28,    28,    29,    29,    30
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     2,     2,     3,     1,     1,     2,     3,     3,
-       3,     1,     1,     1,     1,     3,     3,     4
+       0,     2,     2,     2,     3,     1,     1,     2,     3,     1,
+       3,     1,     3,     1,     1,     1,     1,     3,     3,     4
 };
 
 
@@ -1128,99 +1131,111 @@ yyreduce:
   switch (yyn)
     {
   case 4: /* P: P E TPUNTOCOMA  */
-#line 77 "bison.y"
+#line 78 "bison.y"
                        { printf("Expresion: tipo=%d valor=%d\n", (yyvsp[-1].bloque).tipo, (yyvsp[-1].bloque).valor); }
-#line 1134 "bison.tab.c"
+#line 1137 "bison.tab.c"
     break;
 
   case 7: /* P: E TPUNTOCOMA  */
-#line 80 "bison.y"
+#line 81 "bison.y"
                        { printf("Expresion: tipo=%d valor=%d\n", (yyvsp[-1].bloque).tipo, (yyvsp[-1].bloque).valor); }
-#line 1140 "bison.tab.c"
+#line 1143 "bison.tab.c"
     break;
 
-  case 8: /* E: E TSUMA E  */
-#line 81 "bison.y"
+  case 8: /* E: E TSUMA T  */
+#line 82 "bison.y"
                  {
         if ((yyvsp[-2].bloque).tipo == T_INT && (yyvsp[0].bloque).tipo == T_INT) {
-           (yyval.bloque).tipo = T_INT; (yyval.bloque).valor = (yyvsp[-2].bloque).valor + (yyvsp[0].bloque).valor; 
+            (yyval.bloque).tipo = T_INT; (yyval.bloque).valor = (yyvsp[-2].bloque).valor + (yyvsp[0].bloque).valor;
         } else {
-            printf("Error: '+' solo funciona con int\n");
+            printf("Error linea %d: '+' solo funciona con int\n", yylineno);
             (yyval.bloque).tipo = T_ERROR; (yyval.bloque).valor = 0;
         }
     }
-#line 1153 "bison.tab.c"
+#line 1156 "bison.tab.c"
     break;
 
-  case 9: /* E: E TMULTIPLICACION E  */
-#line 89 "bison.y"
-                              {
-            if ((yyvsp[-2].bloque).tipo == T_INT && (yyvsp[0].bloque).tipo == T_INT) {
-                (yyval.bloque).tipo = T_INT; (yyval.bloque).valor = (yyvsp[-2].bloque).valor * (yyvsp[0].bloque).valor;  
-            } else {
-                printf("Error: '*' solo funciona con int\n");
-                (yyval.bloque).tipo = T_ERROR; (yyval.bloque).valor = 0;
-            }
+  case 9: /* E: T  */
+#line 90 "bison.y"
+         { (yyval.bloque) = (yyvsp[0].bloque); }
+#line 1162 "bison.tab.c"
+    break;
+
+  case 10: /* T: T TMULTIPLICACION F  */
+#line 93 "bison.y"
+                           {
+        if ((yyvsp[-2].bloque).tipo == T_INT && (yyvsp[0].bloque).tipo == T_INT) {
+            (yyval.bloque).tipo = T_INT; (yyval.bloque).valor = (yyvsp[-2].bloque).valor * (yyvsp[0].bloque).valor;
+        } else {
+            printf("Error linea %d: '*' solo funciona con int\n", yylineno);
+            (yyval.bloque).tipo = T_ERROR; (yyval.bloque).valor = 0;
         }
-#line 1166 "bison.tab.c"
+    }
+#line 1175 "bison.tab.c"
     break;
 
-  case 10: /* E: TPA E TPC  */
-#line 97 "bison.y"
-                      { (yyval.bloque) = (yyvsp[-1].bloque); }
-#line 1172 "bison.tab.c"
-    break;
-
-  case 11: /* E: TNUM  */
-#line 98 "bison.y"
-                       { (yyval.bloque).tipo = T_INT; (yyval.bloque).valor = (yyvsp[0].bloque).valor; }
-#line 1178 "bison.tab.c"
-    break;
-
-  case 12: /* E: TTRUE  */
-#line 99 "bison.y"
-                       { (yyval.bloque).tipo = T_BOOL; (yyval.bloque).valor = 1; }
-#line 1184 "bison.tab.c"
-    break;
-
-  case 13: /* E: TFALSE  */
-#line 100 "bison.y"
-                       { (yyval.bloque).tipo = T_BOOL; (yyval.bloque).valor = 0; }
-#line 1190 "bison.tab.c"
-    break;
-
-  case 14: /* E: TID  */
+  case 11: /* T: F  */
 #line 101 "bison.y"
-                       { (yyval.bloque).tipo = buscarVariable((yyvsp[0].bloque).cadena); (yyval.bloque).valor=0; }
-#line 1196 "bison.tab.c"
+         { (yyval.bloque) = (yyvsp[0].bloque); }
+#line 1181 "bison.tab.c"
     break;
 
-  case 15: /* DECLARACION: TINT TID TPUNTOCOMA  */
-#line 103 "bison.y"
-                                    {agregarSimbolo(T_INT, (yyvsp[-1].bloque).cadena);}
-#line 1202 "bison.tab.c"
-    break;
-
-  case 16: /* DECLARACION: TBOOL TID TPUNTOCOMA  */
+  case 12: /* F: TPA E TPC  */
 #line 104 "bison.y"
-                              {agregarSimbolo(T_BOOL, (yyvsp[-1].bloque).cadena);}
-#line 1208 "bison.tab.c"
+                   { (yyval.bloque) = (yyvsp[-1].bloque); }
+#line 1187 "bison.tab.c"
     break;
 
-  case 17: /* ASIGNACION: TID TASIGNACION E TPUNTOCOMA  */
+  case 13: /* F: TNUM  */
+#line 105 "bison.y"
+                   { (yyval.bloque).tipo = T_INT;  (yyval.bloque).valor = (yyvsp[0].bloque).valor; }
+#line 1193 "bison.tab.c"
+    break;
+
+  case 14: /* F: TTRUE  */
+#line 106 "bison.y"
+                   { (yyval.bloque).tipo = T_BOOL; (yyval.bloque).valor = 1; }
+#line 1199 "bison.tab.c"
+    break;
+
+  case 15: /* F: TFALSE  */
 #line 107 "bison.y"
+                   { (yyval.bloque).tipo = T_BOOL; (yyval.bloque).valor = 0; }
+#line 1205 "bison.tab.c"
+    break;
+
+  case 16: /* F: TID  */
+#line 108 "bison.y"
+                   { (yyval.bloque).tipo = buscarVariable((yyvsp[0].bloque).cadena); (yyval.bloque).valor = 0; }
+#line 1211 "bison.tab.c"
+    break;
+
+  case 17: /* DECLARACION: TINT TID TPUNTOCOMA  */
+#line 110 "bison.y"
+                                    {agregarSimbolo(T_INT, (yyvsp[-1].bloque).cadena);}
+#line 1217 "bison.tab.c"
+    break;
+
+  case 18: /* DECLARACION: TBOOL TID TPUNTOCOMA  */
+#line 111 "bison.y"
+                              {agregarSimbolo(T_BOOL, (yyvsp[-1].bloque).cadena);}
+#line 1223 "bison.tab.c"
+    break;
+
+  case 19: /* ASIGNACION: TID TASIGNACION E TPUNTOCOMA  */
+#line 114 "bison.y"
     {
       enum TipoDato tipoVar = buscarVariable((yyvsp[-3].bloque).cadena);
       if (tipoVar == T_ERROR)
-          printf("Error: '%s' no declarada\n", (yyvsp[-3].bloque).cadena);
+          printf("Error linea %d: '%s' no declarada\n", yylineno, (yyvsp[-3].bloque).cadena);
       else if (tipoVar != (yyvsp[-1].bloque).tipo)
-          printf("Error: tipo %d esperado, %d recibido\n", tipoVar, (yyvsp[-1].bloque).tipo);
+          printf("Error linea %d: tipo %d esperado, %d recibido\n", yylineno, tipoVar, (yyvsp[-1].bloque).tipo);
     }
-#line 1220 "bison.tab.c"
+#line 1235 "bison.tab.c"
     break;
 
 
-#line 1224 "bison.tab.c"
+#line 1239 "bison.tab.c"
 
       default: break;
     }
@@ -1413,16 +1428,27 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 114 "bison.y"
+#line 121 "bison.y"
 
 
 void yyerror(char *s) {
-    fprintf(stderr, "Error: %s\n", s);
+    fprintf(stderr, "Error de sintaxis en la linea %d: %s\n", yylineno, s);
 }
 
 void agregarSimbolo(enum TipoDato tipo, char *nombre) {
+    if (CANTSimbolos >= 100) {
+        printf("Error linea %d: tabla de simbolos llena (maximo 100)\n", yylineno);
+        return;
+    }
+    for (int i = 0; i < CANTSimbolos; i++) {
+        if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
+            printf("Error linea %d: '%s' ya fue declarada\n", yylineno, nombre);
+            return;
+        }
+    }
     tablaSimbolos[CANTSimbolos].nombre = nombre;
     tablaSimbolos[CANTSimbolos].tipoDato = tipo;
+    tablaSimbolos[CANTSimbolos].valor = 0;
     CANTSimbolos++;
 }
 

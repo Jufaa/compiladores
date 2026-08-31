@@ -4,6 +4,8 @@
 #include "bison.tab.h"
 %}
 
+%option yylineno
+%option noyywrap
 
 %%
 "int"               { return TINT; }
@@ -25,7 +27,7 @@
 [a-z][a-z0-9]*      { yylval.bloque.cadena = strdup(yytext); return TID; }
 [0-9]+              {yylval.bloque.valor = atoi(yytext); return TNUM;}
 ["\"" "\""]        { }         
-[\t]               { }
+[ \t\r\n]+        { }
 .                 {  }
 
 %%

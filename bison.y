@@ -4,6 +4,7 @@
 #include <string.h>
 
 extern int yylex();
+extern int yylineno;
 extern FILE *yyin;
 void yyerror(char *s);
 
@@ -45,7 +46,7 @@ void imprimirArbol(Nodo *nodo, int nivel);
     }bloque;
 }
 
-%type <bloque> E
+%type <bloque> E T F
 
 %token TINT        256
 %token TBOOL       257
@@ -78,28 +79,34 @@ void imprimirArbol(Nodo *nodo, int nivel);
      | DECLARACION
      | ASIGNACION
      | E TPUNTOCOMA    { printf("Expresion: tipo=%d valor=%d\n", $1.tipo, $1.valor); } ;
-    E: E TSUMA E {
+    E: E TSUMA T {
         if ($1.tipo == T_INT && $3.tipo == T_INT) {
-           $$.tipo = T_INT; $$.valor = $1.valor + $3.valor; 
+            $$.tipo = T_INT; $$.valor = $1.valor + $3.valor;
         } else {
-            printf("Error: '+' solo funciona con int\n");
+            printf("Error linea %d: '+' solo funciona con int\n", yylineno);
             $$.tipo = T_ERROR; $$.valor = 0;
         }
     }
-        | E TMULTIPLICACION E {
-            if ($1.tipo == T_INT && $3.tipo == T_INT) {
-                $$.tipo = T_INT; $$.valor = $1.valor * $3.valor;  
-            } else {
-                printf("Error: '*' solo funciona con int\n");
-                $$.tipo = T_ERROR; $$.valor = 0;
-            }
-        }
-        | TPA E TPC   { $$ = $2; }
-        | TNUM         { $$.tipo = T_INT; $$.valor = $1.valor; }
-        | TTRUE        { $$.tipo = T_BOOL; $$.valor = 1; }
-        | TFALSE       { $$.tipo = T_BOOL; $$.valor = 0; }
-        | TID          { $$.tipo = buscarVariable($1.cadena); $$.valor=0; };
+     | T { $$ = $1; }
+     ;
 
+    T: T TMULTIPLICACION F {
+        if ($1.tipo == T_INT && $3.tipo == T_INT) {
+            $$.tipo = T_INT; $$.valor = $1.valor * $3.valor;
+        } else {
+            printf("Error linea %d: '*' solo funciona con int\n", yylineno);
+            $$.tipo = T_ERROR; $$.valor = 0;
+        }
+    }
+     | F { $$ = $1; }
+     ;
+
+    F: TPA E TPC   { $$ = $2; }
+     | TNUM        { $$.tipo = T_INT;  $$.valor = $1.valor; }
+     | TTRUE       { $$.tipo = T_BOOL; $$.valor = 1; }
+     | TFALSE      { $$.tipo = T_BOOL; $$.valor = 0; }
+     | TID         { $$.tipo = buscarVariable($1.cadena); $$.valor = 0; }
+     ;
     DECLARACION: TINT TID TPUNTOCOMA{agregarSimbolo(T_INT, $2.cadena);}
         | TBOOL TID TPUNTOCOMA{agregarSimbolo(T_BOOL, $2.cadena);};
 
@@ -107,19 +114,30 @@ void imprimirArbol(Nodo *nodo, int nivel);
     {
       enum TipoDato tipoVar = buscarVariable($1.cadena);
       if (tipoVar == T_ERROR)
-          printf("Error: '%s' no declarada\n", $1.cadena);
+          printf("Error linea %d: '%s' no declarada\n", yylineno, $1.cadena);
       else if (tipoVar != $3.tipo)
-          printf("Error: tipo %d esperado, %d recibido\n", tipoVar, $3.tipo);
+          printf("Error linea %d: tipo %d esperado, %d recibido\n", yylineno, tipoVar, $3.tipo);
     };
 %%
 
 void yyerror(char *s) {
-    fprintf(stderr, "Error: %s\n", s);
+    fprintf(stderr, "Error de sintaxis en la linea %d: %s\n", yylineno, s);
 }
 
 void agregarSimbolo(enum TipoDato tipo, char *nombre) {
+    if (CANTSimbolos >= 100) {
+        printf("Error linea %d: tabla de simbolos llena (maximo 100)\n", yylineno);
+        return;
+    }
+    for (int i = 0; i < CANTSimbolos; i++) {
+        if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
+            printf("Error linea %d: '%s' ya fue declarada\n", yylineno, nombre);
+            return;
+        }
+    }
     tablaSimbolos[CANTSimbolos].nombre = nombre;
     tablaSimbolos[CANTSimbolos].tipoDato = tipo;
+    tablaSimbolos[CANTSimbolos].valor = 0;
     CANTSimbolos++;
 }
 
