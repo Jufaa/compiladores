@@ -1,12 +1,4 @@
 %{
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-extern int yylex();
-extern FILE *yyin;
-void yyerror(char *s);
-%}
-%{
 enum TipoNodo {N_NUM, N_BOOL, N_ID, N_SUMA, N_MULT, N_ASIGN, N_DECL, N_SEQ, N_BLOQUE};
 enum TipoDato {T_INT, T_BOOL, T_ERROR};
 
@@ -24,6 +16,16 @@ typedef struct Nodo{
     struct Nodo *izq;
     struct Nodo *der;
 } Nodo;
+
+}
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+extern int yylex();
+extern FILE *yyin;
+void yyerror(char *s);
+%}
 
 
 %{
