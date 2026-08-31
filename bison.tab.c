@@ -1472,6 +1472,8 @@ enum TipoDato buscarVariable(char *nombre) {
 }
 
 Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre,int valor, Nodo *izq, Nodo *der, int linea){
+    TipoDato dato = buscarVariabe(nombre);
+    if(dat != T_ERROR){
     Nodo *nuevoNodo = (Nodo *)malloc(sizeof(Nodo));
     nuevoNodo->tipoNodo = tipo;
     nuevoNodo->tipoDato = T_ERROR;
@@ -1482,6 +1484,9 @@ Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre,in
     nuevoNodo->der = der;
     nuevoNodo->linea = linea;
     return nuevoNodo;
+    }else{
+        return 0; // no se qe se puede devolver
+    }
 }
 char *nombreNodo(enum TipoNodo t) {
     switch(t) {
