@@ -24,8 +24,8 @@
 "}"                 { return TLLAVEC; }
 ";"                 { return TPUNTOCOMA; }
 ","                 { return TCOMA; }
-[a-z][a-z0-9]*      { yylval.bloque.cadena = strdup(yytext); return TID; }
-[0-9]+              {yylval.bloque.valor = atoi(yytext); return TNUM;}
+[a-z][a-z0-9]*      { yylval.cadena = strdup(yytext); return TID; }
+[0-9]+              { yylval.valor = atoi(yytext); return TNUM; }
 ["\"" "\""]        { }         
 [ \t\r\n]+        { }
 .                 {  }

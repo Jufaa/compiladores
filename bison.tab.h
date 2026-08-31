@@ -83,16 +83,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 40 "bison.y"
+#line 46 "bison.y"
 
-    struct {
-        int tipo; // tipo de dato (T_INT, T_BOOL, T_ERROR)
-        int valor;
-        char *cadena;
-        int linea;
-    }bloque;
+    int valor;
+    char *cadena;
+    struct Nodo *nodo;
 
-#line 96 "bison.tab.h"
+#line 93 "bison.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

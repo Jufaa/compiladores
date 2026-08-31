@@ -880,12 +880,12 @@ YY_RULE_SETUP
 case 17:
 YY_RULE_SETUP
 #line 27 "flex.l"
-{ yylval.bloque.cadena = strdup(yytext); return TID; }
+{ yylval.cadena = strdup(yytext); return TID; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
 #line 28 "flex.l"
-{yylval.bloque.valor = atoi(yytext); return TNUM;}
+{ yylval.valor = atoi(yytext); return TNUM; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
