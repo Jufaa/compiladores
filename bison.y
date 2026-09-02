@@ -2,43 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ast.h"
+#include "ts.h"
 
 extern int yylex();
 extern int yylineno;
 extern FILE *yyin;
 void yyerror(char *s);
 
-enum TipoNodo {N_NUM, N_BOOL, N_ID, N_SUMA, N_MULT, N_ASIGN, N_DECL, N_SEQ, N_BLOQUE};
-enum TipoDato {T_INT, T_BOOL, T_ERROR};
-
-
-typedef struct{
-    char* nombre;
-    enum TipoDato tipoDato;
-    int valor;
-}TS;
-
-typedef struct Nodo{
-    enum TipoNodo tipoNodo;
-    enum TipoDato tipoDato;
-    int indiceEnLaTablaSimbolos;
-    char* nombre;
-    int valor;
-    struct Nodo *izq;
-    struct Nodo *der;
-    int linea;
-} Nodo;
-
-int CANTSimbolos = 0;
 Nodo *raiz = NULL;
-TS tablaSimbolos[100];
-
-void agregarSimbolo(enum TipoDato tipo, char *nombre);
-enum TipoDato buscarVariable(char *nombre);
-
-Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre,int valor, Nodo *izq, Nodo *der, int linea);
-void imprimirArbol(Nodo *nodo, int nivel);
-Nodo *crearNodoDecl(char *nombre, enum TipoDato tipo, int linea);
 
 %}
 
@@ -108,75 +80,6 @@ void yyerror(char *s) {
     fprintf(stderr, "Error de sintaxis en la linea %d: %s\n", yylineno, s);
 }
 
-void agregarSimbolo(enum TipoDato tipo, char *nombre) {
-    if (CANTSimbolos >= 100) {
-        printf("Error linea %d: tabla de simbolos llena (maximo 100)\n", yylineno);
-        return;
-    }
-    for (int i = 0; i < CANTSimbolos; i++) {
-        if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
-            printf("Error linea %d: '%s' ya fue declarada\n", yylineno, nombre);
-            return;
-        }
-    }
-    tablaSimbolos[CANTSimbolos].nombre = nombre;
-    tablaSimbolos[CANTSimbolos].tipoDato = tipo;
-    tablaSimbolos[CANTSimbolos].valor = 0;
-    CANTSimbolos++;
-}
-
-enum TipoDato buscarVariable(char *nombre) {
-    for (int i = 0; i < CANTSimbolos; i++) {
-        if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
-            return tablaSimbolos[i].tipoDato;
-        }
-    }
-    return T_ERROR;
-}
-
-Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre,int valor, Nodo *izq, Nodo *der, int linea){
-    Nodo *nuevoNodo = (Nodo *)malloc(sizeof(Nodo));
-    nuevoNodo->tipoNodo = tipo;
-    nuevoNodo->tipoDato = T_ERROR;
-    nuevoNodo->indiceEnLaTablaSimbolos = indiceEnLaTablaSimbolos;
-    nuevoNodo->nombre = nombre;
-    nuevoNodo->valor = valor;
-    nuevoNodo->izq = izq;
-    nuevoNodo->der = der;
-    nuevoNodo->linea = linea;
-    return nuevoNodo;
-}
-char *nombreNodo(enum TipoNodo t) {
-    switch(t) {
-        case N_NUM: return "NUM";
-        case N_BOOL: return "BOOL";
-        case N_ID: return "ID";
-        case N_SUMA: return "+";
-        case N_MULT: return "*";
-        case N_ASIGN: return "=";
-        case N_DECL: return "DECL";
-        case N_SEQ: return "SEQ";
-        default: return "?";
-    }
-}
-void imprimirArbol(Nodo *nodo, int nivel) {
-    if (nodo == NULL) return;
-    for (int i = 0; i < nivel; i++) printf("  ");
-    if (nodo->nombre != NULL)
-        printf("%s (%s)\n", nombreNodo(nodo->tipoNodo), nodo->nombre);
-    else if (nodo->tipoNodo == N_NUM || nodo->tipoNodo == N_BOOL)
-        printf("%s (%d)\n", nombreNodo(nodo->tipoNodo), nodo->valor);
-    else
-        printf("%s\n", nombreNodo(nodo->tipoNodo));
-    imprimirArbol(nodo->izq, nivel + 1);
-    imprimirArbol(nodo->der, nivel + 1);
-}
-
-Nodo *crearNodoDecl(char *nombre, enum TipoDato tipo, int linea){
-    Nodo *nuevoNodo = crearNodo(N_DECL, -1, nombre, 0, NULL, NULL, linea);
-    nuevoNodo->tipoDato = tipo;
-    return nuevoNodo;
-}
 int main(int argc, char **argv) {
     ++argv; --argc;
     if (argc > 0) yyin = fopen(argv[0], "r");

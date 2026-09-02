@@ -72,46 +72,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ast.h"
+#include "ts.h"
 
 extern int yylex();
 extern int yylineno;
 extern FILE *yyin;
 void yyerror(char *s);
 
-enum TipoNodo {N_NUM, N_BOOL, N_ID, N_SUMA, N_MULT, N_ASIGN, N_DECL, N_SEQ, N_BLOQUE};
-enum TipoDato {T_INT, T_BOOL, T_ERROR};
-
-
-typedef struct{
-    char* nombre;
-    enum TipoDato tipoDato;
-    int valor;
-}TS;
-
-typedef struct Nodo{
-    enum TipoNodo tipoNodo;
-    enum TipoDato tipoDato;
-    int indiceEnLaTablaSimbolos;
-    char* nombre;
-    int valor;
-    struct Nodo *izq;
-    struct Nodo *der;
-    int linea;
-} Nodo;
-
-int CANTSimbolos = 0;
 Nodo *raiz = NULL;
-TS tablaSimbolos[100];
-
-void agregarSimbolo(enum TipoDato tipo, char *nombre);
-enum TipoDato buscarVariable(char *nombre);
-
-Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre,int valor, Nodo *izq, Nodo *der, int linea);
-void imprimirArbol(Nodo *nodo, int nivel);
-Nodo *crearNodoDecl(char *nombre, enum TipoDato tipo, int linea);
 
 
-#line 115 "bison.tab.c"
+#line 87 "bison.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -557,8 +529,8 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int8 yyrline[] =
 {
-       0,    79,    79,    80,    81,    82,    83,    84,    86,    87,
-      90,    91,    94,    95,    96,    97,    98,   100,   101,   103
+       0,    51,    51,    52,    53,    54,    55,    56,    58,    59,
+      62,    63,    66,    67,    68,    69,    70,    72,    73,    75
 };
 #endif
 
@@ -1137,115 +1109,115 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* P: P DECLARACION  */
-#line 79 "bison.y"
+#line 51 "bison.y"
                          { (yyval.nodo) = crearNodo(N_SEQ, -1, NULL, 0, (yyvsp[-1].nodo), (yyvsp[0].nodo), yylineno); raiz = (yyval.nodo); }
-#line 1143 "bison.tab.c"
+#line 1115 "bison.tab.c"
     break;
 
   case 3: /* P: P ASIGNACION  */
-#line 80 "bison.y"
+#line 52 "bison.y"
                          { (yyval.nodo) = crearNodo(N_SEQ, -1, NULL, 0, (yyvsp[-1].nodo), (yyvsp[0].nodo), yylineno); raiz = (yyval.nodo); }
-#line 1149 "bison.tab.c"
+#line 1121 "bison.tab.c"
     break;
 
   case 4: /* P: P E TPUNTOCOMA  */
-#line 81 "bison.y"
+#line 53 "bison.y"
                          { (yyval.nodo) = crearNodo(N_SEQ, -1, NULL, 0, (yyvsp[-2].nodo), (yyvsp[-1].nodo), yylineno); raiz = (yyval.nodo); }
-#line 1155 "bison.tab.c"
+#line 1127 "bison.tab.c"
     break;
 
   case 5: /* P: DECLARACION  */
-#line 82 "bison.y"
+#line 54 "bison.y"
                          { (yyval.nodo) = (yyvsp[0].nodo); raiz = (yyval.nodo); }
-#line 1161 "bison.tab.c"
+#line 1133 "bison.tab.c"
     break;
 
   case 6: /* P: ASIGNACION  */
-#line 83 "bison.y"
+#line 55 "bison.y"
                          { (yyval.nodo) = (yyvsp[0].nodo); raiz = (yyval.nodo); }
-#line 1167 "bison.tab.c"
+#line 1139 "bison.tab.c"
     break;
 
   case 7: /* P: E TPUNTOCOMA  */
-#line 84 "bison.y"
+#line 56 "bison.y"
                          { (yyval.nodo) = (yyvsp[-1].nodo); raiz = (yyval.nodo); }
-#line 1173 "bison.tab.c"
+#line 1145 "bison.tab.c"
     break;
 
   case 8: /* E: E TSUMA T  */
-#line 86 "bison.y"
+#line 58 "bison.y"
                  {(yyval.nodo) = crearNodo(N_SUMA, -1, NULL, 0, (yyvsp[-2].nodo), (yyvsp[0].nodo), yylineno);}
-#line 1179 "bison.tab.c"
+#line 1151 "bison.tab.c"
     break;
 
   case 9: /* E: T  */
-#line 87 "bison.y"
+#line 59 "bison.y"
          { (yyval.nodo) = (yyvsp[0].nodo); }
-#line 1185 "bison.tab.c"
+#line 1157 "bison.tab.c"
     break;
 
   case 10: /* T: T TMULTIPLICACION F  */
-#line 90 "bison.y"
+#line 62 "bison.y"
                            {(yyval.nodo) = crearNodo(N_MULT, -1, NULL, 0, (yyvsp[-2].nodo), (yyvsp[0].nodo), yylineno);}
-#line 1191 "bison.tab.c"
+#line 1163 "bison.tab.c"
     break;
 
   case 11: /* T: F  */
-#line 91 "bison.y"
+#line 63 "bison.y"
          { (yyval.nodo) = (yyvsp[0].nodo); }
-#line 1197 "bison.tab.c"
+#line 1169 "bison.tab.c"
     break;
 
   case 12: /* F: TPA E TPC  */
-#line 94 "bison.y"
+#line 66 "bison.y"
                    { (yyval.nodo) = (yyvsp[-1].nodo); }
-#line 1203 "bison.tab.c"
+#line 1175 "bison.tab.c"
     break;
 
   case 13: /* F: TNUM  */
-#line 95 "bison.y"
+#line 67 "bison.y"
                    { (yyval.nodo) = crearNodo(N_NUM, -1, NULL, (yyvsp[0].valor), NULL, NULL, yylineno); }
-#line 1209 "bison.tab.c"
+#line 1181 "bison.tab.c"
     break;
 
   case 14: /* F: TTRUE  */
-#line 96 "bison.y"
+#line 68 "bison.y"
                    { (yyval.nodo) = crearNodo(N_BOOL, -1, NULL, 1, NULL, NULL, yylineno); }
-#line 1215 "bison.tab.c"
+#line 1187 "bison.tab.c"
     break;
 
   case 15: /* F: TFALSE  */
-#line 97 "bison.y"
+#line 69 "bison.y"
                    { (yyval.nodo) = crearNodo(N_BOOL, -1, NULL, 0, NULL, NULL, yylineno); }
-#line 1221 "bison.tab.c"
+#line 1193 "bison.tab.c"
     break;
 
   case 16: /* F: TID  */
-#line 98 "bison.y"
+#line 70 "bison.y"
                    { (yyval.nodo) = crearNodo(N_ID, -1, (yyvsp[0].cadena), 0, NULL, NULL, yylineno);}
-#line 1227 "bison.tab.c"
+#line 1199 "bison.tab.c"
     break;
 
   case 17: /* DECLARACION: TINT TID TPUNTOCOMA  */
-#line 100 "bison.y"
+#line 72 "bison.y"
                                     {(yyval.nodo) = crearNodoDecl((yyvsp[-1].cadena), T_INT, yylineno);}
-#line 1233 "bison.tab.c"
+#line 1205 "bison.tab.c"
     break;
 
   case 18: /* DECLARACION: TBOOL TID TPUNTOCOMA  */
-#line 101 "bison.y"
+#line 73 "bison.y"
                               {(yyval.nodo) = crearNodoDecl((yyvsp[-1].cadena), T_BOOL, yylineno);}
-#line 1239 "bison.tab.c"
+#line 1211 "bison.tab.c"
     break;
 
   case 19: /* ASIGNACION: TID TASIGNACION E TPUNTOCOMA  */
-#line 104 "bison.y"
+#line 76 "bison.y"
       { (yyval.nodo) = crearNodo(N_ASIGN, -1, (yyvsp[-3].cadena), 0, (yyvsp[-1].nodo), NULL, yylineno); }
-#line 1245 "bison.tab.c"
+#line 1217 "bison.tab.c"
     break;
 
 
-#line 1249 "bison.tab.c"
+#line 1221 "bison.tab.c"
 
       default: break;
     }
@@ -1438,87 +1410,13 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 105 "bison.y"
+#line 77 "bison.y"
 
 
 void yyerror(char *s) {
     fprintf(stderr, "Error de sintaxis en la linea %d: %s\n", yylineno, s);
 }
 
-void agregarSimbolo(enum TipoDato tipo, char *nombre) {
-    if (CANTSimbolos >= 100) {
-        printf("Error linea %d: tabla de simbolos llena (maximo 100)\n", yylineno);
-        return;
-    }
-    for (int i = 0; i < CANTSimbolos; i++) {
-        if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
-            printf("Error linea %d: '%s' ya fue declarada\n", yylineno, nombre);
-            return;
-        }
-    }
-    tablaSimbolos[CANTSimbolos].nombre = nombre;
-    tablaSimbolos[CANTSimbolos].tipoDato = tipo;
-    tablaSimbolos[CANTSimbolos].valor = 0;
-    CANTSimbolos++;
-}
-
-enum TipoDato buscarVariable(char *nombre) {
-    for (int i = 0; i < CANTSimbolos; i++) {
-        if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
-            return tablaSimbolos[i].tipoDato;
-        }
-    }
-    return T_ERROR;
-}
-
-Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre,int valor, Nodo *izq, Nodo *der, int linea){
-    TipoDato dato = buscarVariabe(nombre);
-    if(dat != T_ERROR){
-    Nodo *nuevoNodo = (Nodo *)malloc(sizeof(Nodo));
-    nuevoNodo->tipoNodo = tipo;
-    nuevoNodo->tipoDato = T_ERROR;
-    nuevoNodo->indiceEnLaTablaSimbolos = indiceEnLaTablaSimbolos;
-    nuevoNodo->nombre = nombre;
-    nuevoNodo->valor = valor;
-    nuevoNodo->izq = izq;
-    nuevoNodo->der = der;
-    nuevoNodo->linea = linea;
-    return nuevoNodo;
-    }else{
-        return 0; // no se qe se puede devolver
-    }
-}
-char *nombreNodo(enum TipoNodo t) {
-    switch(t) {
-        case N_NUM: return "NUM";
-        case N_BOOL: return "BOOL";
-        case N_ID: return "ID";
-        case N_SUMA: return "+";
-        case N_MULT: return "*";
-        case N_ASIGN: return "=";
-        case N_DECL: return "DECL";
-        case N_SEQ: return "SEQ";
-        default: return "?";
-    }
-}
-void imprimirArbol(Nodo *nodo, int nivel) {
-    if (nodo == NULL) return;
-    for (int i = 0; i < nivel; i++) printf("  ");
-    if (nodo->nombre != NULL)
-        printf("%s (%s)\n", nombreNodo(nodo->tipoNodo), nodo->nombre);
-    else if (nodo->tipoNodo == N_NUM || nodo->tipoNodo == N_BOOL)
-        printf("%s (%d)\n", nombreNodo(nodo->tipoNodo), nodo->valor);
-    else
-        printf("%s\n", nombreNodo(nodo->tipoNodo));
-    imprimirArbol(nodo->izq, nivel + 1);
-    imprimirArbol(nodo->der, nivel + 1);
-}
-
-Nodo *crearNodoDecl(char *nombre, enum TipoDato tipo, int linea){
-    Nodo *nuevoNodo = crearNodo(N_DECL, -1, nombre, 0, NULL, NULL, linea);
-    nuevoNodo->tipoDato = tipo;
-    return nuevoNodo;
-}
 int main(int argc, char **argv) {
     ++argv; --argc;
     if (argc > 0) yyin = fopen(argv[0], "r");
