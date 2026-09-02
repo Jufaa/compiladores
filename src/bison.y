@@ -4,6 +4,8 @@
 #include <string.h>
 #include "ast.h"
 #include "ts.h"
+#include "semantico.h"
+#include "interprete.h"
 
 extern int yylex();
 extern int yylineno;
@@ -87,5 +89,22 @@ int main(int argc, char **argv) {
     yyparse();
     printf("\n--- ARBOL ---\n");
     imprimirArbol(raiz, 0);
+
+    printf("\n--- ANALISIS SEMANTICO ---\n");
+    resolverNombres(raiz);
+    if (hayErrores) {
+        printf("Compilacion abortada por errores.\n");
+        return 1;
+    }
+    chequearTipos(raiz);
+    if (hayErrores) {
+        printf("Compilacion abortada por errores.\n");
+        return 1;
+    }
+    printf("Sin errores semanticos.\n");
+
+    printf("\n--- EJECUCION ---\n");
+    evaluar(raiz);
+    imprimirTabla();
     return 0;
 }

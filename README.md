@@ -1,9 +1,14 @@
+# Compilador
+```
+make                              compila lo que cambio solamente
+make test                         corre los test
+make run ARCHIVO=tests/otro.txt   corre el archivo que le paso
+make clean                        limpia el build
+```
 
-bison -d bison.y
-flex flex.l 
-gcc bison.tab.c lex.yy.c -o compilador -lfl //// modulado == gcc lex.yy.c bison.tab.c ast.c ts.c -o mi_compilador
-./compilador prueba.txt /// modulado === ./mi_compilador prueba.txt     
-
-
-
+compilar y correr a mano un archivo:
+```
+make
+./compilador tests/prueba.txt
+```
 
