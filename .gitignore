@@ -12,3 +12,4 @@ compilador
 *.swp
 *.swo
 .DS_Store
+.compilador
