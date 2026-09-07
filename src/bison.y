@@ -103,7 +103,6 @@ int main(int argc, char **argv) {
     }
     printf("Sin errores semanticos.\n");
 
-    printf("\n--- EJECUCION ---\n");
     evaluar(raiz);
     imprimirTabla();
     return 0;
