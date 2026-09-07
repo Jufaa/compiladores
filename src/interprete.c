@@ -23,7 +23,6 @@ int evaluar(Nodo *nodo){
     case N_ID:
         return tablaSimbolos[nodo->indiceEnLaTablaSimbolos].valor;
     case N_SEQ:
-    case N_BLOQUE:
         evaluar(nodo->izq);
         evaluar(nodo->der);
         return 0;

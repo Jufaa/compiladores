@@ -37,10 +37,6 @@ char *nombreNodo(enum TipoNodo t) {
 }
 
 #define MAX_SENTENCIAS 512
-
-/* Una cadena de N_SEQ es conceptualmente una LISTA de sentencias, no un arbol
-   anidado. La aplanamos para que las 26 sentencias de un programa no queden
-   con 26 niveles de sangria. */
 static void juntarSentencias(Nodo *nodo, Nodo **lista, int *cant) {
     if (nodo == NULL) return;
     if (nodo->tipoNodo == N_SEQ) {
@@ -60,8 +56,6 @@ static void etiquetaNodo(Nodo *nodo) {
         printf("%s\n", nombreNodo(nodo->tipoNodo));
 }
 
-/* El prefijo se va acumulando: una vertical si la rama sigue mas abajo,
-   espacios si esa rama ya se cerro. */
 static void imprimirRama(Nodo *nodo, const char *prefijo, int esUltimo) {
     if (nodo == NULL) return;
 

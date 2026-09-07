@@ -1,7 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
-enum TipoNodo {N_NUM, N_BOOL, N_ID, N_SUMA, N_MULT, N_ASIGN, N_DECL, N_SEQ, N_BLOQUE};
+enum TipoNodo {N_NUM, N_BOOL, N_ID, N_SUMA, N_MULT, N_ASIGN, N_DECL, N_SEQ};
 enum TipoDato {T_INT, T_BOOL, T_ERROR};
 
 typedef struct Nodo {

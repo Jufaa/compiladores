@@ -9,8 +9,7 @@ void resolverNombres(Nodo *nodo) {
 
     switch (nodo->tipoNodo) {
 
-        case N_SEQ:
-        case N_BLOQUE: {
+        case N_SEQ:{
             resolverNombres(nodo->izq);
             resolverNombres(nodo->der);
             break;
@@ -120,7 +119,6 @@ enum TipoDato chequearTipos(Nodo *nodo) {
         }
 
         case N_SEQ:
-        case N_BLOQUE:
             chequearTipos(nodo->izq);
             chequearTipos(nodo->der);
             break;
