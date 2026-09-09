@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "codigo.h"
-#include "ts.h"
+#include "codigoIntermedio.h"
+#include "tablaSimbolos.h"
 
 int CANTInstrucciones = 0;
 Instruccion instrucciones[100];

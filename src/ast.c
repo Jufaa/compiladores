@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ast.h"
+#define MAX_SENTENCIAS 512
 
 Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre, int valor, Nodo *izq, Nodo *der, int linea) {
     Nodo *nuevoNodo = (Nodo *)malloc(sizeof(Nodo));
@@ -22,6 +23,14 @@ Nodo *crearNodoDecl(char *nombre, enum TipoDato tipo, int linea) {
     return nuevoNodo;
 }
 
+char *nombreTipo(enum TipoDato t) {
+    switch (t) {
+        case T_INT:  return "int";
+        case T_BOOL: return "bool";
+        default:     return "error";
+    }
+}
+
 char *nombreNodo(enum TipoNodo t) {
     switch(t) {
         case N_NUM: return "NUM";
@@ -36,7 +45,14 @@ char *nombreNodo(enum TipoNodo t) {
     }
 }
 
-#define MAX_SENTENCIAS 512
+
+
+
+
+
+
+
+// para el imprimir el arbol
 static void juntarSentencias(Nodo *nodo, Nodo **lista, int *cant) {
     if (nodo == NULL) return;
     if (nodo->tipoNodo == N_SEQ) {
@@ -49,11 +65,15 @@ static void juntarSentencias(Nodo *nodo, Nodo **lista, int *cant) {
 
 static void etiquetaNodo(Nodo *nodo) {
     if (nodo->nombre != NULL)
-        printf("%s (%s)\n", nombreNodo(nodo->tipoNodo), nodo->nombre);
+        printf("%s (%s)", nombreNodo(nodo->tipoNodo), nodo->nombre);
     else if (nodo->tipoNodo == N_NUM || nodo->tipoNodo == N_BOOL)
-        printf("%s (%d)\n", nombreNodo(nodo->tipoNodo), nodo->valor);
+        printf("%s (%d)", nombreNodo(nodo->tipoNodo), nodo->valor);
     else
-        printf("%s\n", nombreNodo(nodo->tipoNodo));
+        printf("%s", nombreNodo(nodo->tipoNodo));
+    if (nodo->tipoDato != T_ERROR)
+        printf(" : %s", nombreTipo(nodo->tipoDato));
+
+    printf("\n");
 }
 
 static void imprimirRama(Nodo *nodo, const char *prefijo, int esUltimo) {

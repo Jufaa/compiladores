@@ -1,5 +1,5 @@
-#ifndef TS_H
-#define TS_H
+#ifndef TABLASIMBOLOS_H
+#define TABLASIMBOLOS_H
 #include "ast.h"
 
 typedef struct {

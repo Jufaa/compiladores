@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "interprete.h"
 #include "ast.h"
-#include "ts.h"
+#include "tablaSimbolos.h"
 int evaluar(Nodo *nodo){
     if (nodo == NULL) return 0;
     switch (nodo->tipoNodo)
@@ -16,10 +16,11 @@ int evaluar(Nodo *nodo){
         return evaluar(nodo->izq) * evaluar(nodo->der);
     case N_SUMA:
         return evaluar(nodo->izq) + evaluar(nodo->der);
-    case N_ASIGN:
-     int v = evaluar(nodo->izq);
-    tablaSimbolos[nodo->indiceEnLaTablaSimbolos].valor = v;     
-    return v;
+    case N_ASIGN:{
+        int v = evaluar(nodo->izq);
+        tablaSimbolos[nodo->indiceEnLaTablaSimbolos].valor = v;     
+        return v;
+    }
     case N_ID:
         return tablaSimbolos[nodo->indiceEnLaTablaSimbolos].valor;
     case N_SEQ:

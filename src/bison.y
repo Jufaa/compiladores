@@ -3,10 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
-#include "ts.h"
-#include "semantico.h"
-#include "interprete.h"
-#include "codigo.h"
 
 extern int yylex();
 extern int yylineno;
@@ -24,7 +20,7 @@ Nodo *raiz = NULL;
     struct Nodo *nodo;
 }
 
-%type <nodo> E T F P DECLARACION ASIGNACION
+%type <nodo> E P DECLARACION ASIGNACION
 
 %token TINT        256
 %token TBOOL       257
@@ -48,6 +44,9 @@ Nodo *raiz = NULL;
 %token TBLANCO     276
 %token TERROR      277
 
+%left TSUMA
+%left TMULTIPLICACION
+
 %%
 
 
@@ -58,19 +57,13 @@ Nodo *raiz = NULL;
      | ASIGNACION        { $$ = $1; raiz = $$; }
      | E TPUNTOCOMA      { $$ = $1; raiz = $$; }
      ;
-    E: E TSUMA T {$$ = crearNodo(N_SUMA, -1, NULL, 0, $1, $3, yylineno);}
-     | T { $$ = $1; }
-     ;
-
-    T: T TMULTIPLICACION F {$$ = crearNodo(N_MULT, -1, NULL, 0, $1, $3, yylineno);}
-     | F { $$ = $1; }
-     ;
-
-    F: TPA E TPC   { $$ = $2; }
+    E: E TSUMA E           { $$ = crearNodo(N_SUMA, -1, NULL, 0, $1, $3, yylineno); }
+     | E TMULTIPLICACION E { $$ = crearNodo(N_MULT, -1, NULL, 0, $1, $3, yylineno); }
+     | TPA E TPC   { $$ = $2; }
      | TNUM        { $$ = crearNodo(N_NUM, -1, NULL, $1, NULL, NULL, yylineno); }
      | TTRUE       { $$ = crearNodo(N_BOOL, -1, NULL, 1, NULL, NULL, yylineno); }
      | TFALSE      { $$ = crearNodo(N_BOOL, -1, NULL, 0, NULL, NULL, yylineno); }
-     | TID         { $$ = crearNodo(N_ID, -1, $1, 0, NULL, NULL, yylineno);}
+     | TID         { $$ = crearNodo(N_ID, -1, $1, 0, NULL, NULL, yylineno); }
      ;
     DECLARACION: TINT TID TPUNTOCOMA{$$ = crearNodoDecl($2, T_INT, yylineno);}
         | TBOOL TID TPUNTOCOMA{$$ = crearNodoDecl($2, T_BOOL, yylineno);};
@@ -81,33 +74,4 @@ Nodo *raiz = NULL;
 
 void yyerror(char *s) {
     fprintf(stderr, "Error de sintaxis en la linea %d: %s\n", yylineno, s);
-}
-
-int main(int argc, char **argv) {
-    ++argv; --argc;
-    if (argc > 0) yyin = fopen(argv[0], "r");
-    else yyin = stdin;
-    yyparse();
-    printf("\n--- ARBOL ---\n");
-    imprimirArbol(raiz, 0);
-
-    printf("\n--- ANALISIS SEMANTICO ---\n");
-    resolverNombres(raiz);
-    if (hayErrores) {
-        printf("Compilacion abortada por errores.\n");
-        return 1;
-    }
-    chequearTipos(raiz);
-    if (hayErrores) {
-        printf("Compilacion abortada por errores.\n");
-        return 1;
-    }
-    printf("Sin errores semanticos.\n");
-
-    evaluar(raiz);
-    imprimirTabla();
-
-    generarCodigo(raiz);
-    imprimirCodigo();
-    return 0;
 }

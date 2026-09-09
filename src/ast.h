@@ -19,6 +19,7 @@ Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre, i
 Nodo *crearNodoDecl(char *nombre, enum TipoDato tipo, int linea);
 void imprimirArbol(Nodo *nodo, int nivel);
 char *nombreNodo(enum TipoNodo t);
+char *nombreTipo(enum TipoDato t);
 void resolverNombres(Nodo *nodo);
 
 #endif
