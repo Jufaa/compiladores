@@ -6,6 +6,7 @@
 #include "ts.h"
 #include "semantico.h"
 #include "interprete.h"
+#include "codigo.h"
 
 extern int yylex();
 extern int yylineno;
@@ -105,5 +106,8 @@ int main(int argc, char **argv) {
 
     evaluar(raiz);
     imprimirTabla();
+
+    generarCodigo(raiz);
+    imprimirCodigo();
     return 0;
 }
