@@ -1,9 +1,17 @@
 # Compilador
+
+Integrantes: 
+Ammann Berruti, Sebastián
+Cerutti Norris, Ignacio
+Francitorra, Juan Cruz
+
+Compilacion del preproyecto:
+
 ```
-make                              compila lo que cambio solamente
-make test                         corre los test
-make run ARCHIVO=tests/otro.txt   corre el archivo que le paso
-make clean                        limpia el build
+make                              compila unicamente nuevos camvios
+make test                         corre los tests
+make run ARCHIVO=tests/otro.txt   corre el archivo especificado
+make clean                        limpia la build
 ```
 
 compilar y correr a mano un archivo:
