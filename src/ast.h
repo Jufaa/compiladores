@@ -1,8 +1,19 @@
 #ifndef AST_H
 #define AST_H
 
-enum TipoNodo {N_NUM, N_BOOL, N_ID, N_SUMA, N_MULT, N_ASIGN, N_DECL, N_SEQ};
-enum TipoDato {T_INT, T_BOOL, T_ERROR};
+enum TipoNodo {
+    N_NUM, N_FLOAT, N_BOOL, N_ID,
+    N_SUMA, N_MULT, N_RESTA, N_DIV, N_MOD,
+    N_COMPARACION, N_MENOR, N_MAYOR,
+    N_AND, N_OR,
+    N_NEG, N_NOT,
+    N_ASIGN, N_DECL, N_SEQ,
+    N_IF, N_IFELSE, N_WHILE,
+    N_RETURN, N_BLOQUE,
+    N_METODO, N_PARAM, N_LLAMADA
+};
+
+enum TipoDato {T_INT, T_BOOL, T_FLOAT, T_ERROR, T_VOID};
 
 typedef struct Nodo {
     enum TipoNodo tipoNodo;
@@ -10,6 +21,7 @@ typedef struct Nodo {
     int indiceEnLaTablaSimbolos;
     char* nombre;
     int valor;
+    float valorFloat; //TODO: q onda aca
     struct Nodo *izq;
     struct Nodo *der;
     int linea;
