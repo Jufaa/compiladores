@@ -9,7 +9,7 @@
 %option noyywrap
 
 %%
-"//".*              { return TCOMENTARIO1; }
+"//".*              {}
 "int"               { return TINT; }
 "float"             { return TFLOAT; }
 "boolean"              { return TBOOL; }
@@ -44,7 +44,7 @@
 [a-zA-Z][a-zA-Z0-9]*  { yylval.cadena = strdup(yytext); return TID; }
 [0-9]+"."[0-9]+     { yylval.valorFloat = atof(yytext); return TFLOATNUM; }
 [0-9]+              { yylval.valor = atoi(yytext); return TNUM; }
-\/\*([^*]|\*+[^*/])*\*\/      { return TCOMENTARIO2;}
+\/\*([^*]|\*+[^*/])*\*\/      { }
 [ \t\r\n]+          { }
 .                   { fprintf(stderr, "Error lexico en la linea %d: caracter '%s' no reconocido\n", yylineno, yytext); }
 

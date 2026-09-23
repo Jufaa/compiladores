@@ -47,3 +47,8 @@ tene 2 direccione como assembler
 o 3
  igual eso no va solamente va hasta lo de asig eso del enum y lo guardamos en una list 
 lo q tengo duda es esto para asignalr la pos ala varaible mov $1, -16(noseque)
+
+
+la pila de niveles una busqeda global otra por bloqe
+el simbolo tenga la etieta para diferenciar si es una funcion o variable dentro de las variables tenga las locales y las globales
+o un parametro
