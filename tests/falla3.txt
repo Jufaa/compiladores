@@ -1,0 +1,14 @@
+intt dec(int x) {
+return x - 1;
+}
+void main() {
+int y;
+int suma;
+y = 4;
+suma = 0;
+while (y > 0) {
+suma = suma + y;
+y = dec(y);
+}
+
+}
