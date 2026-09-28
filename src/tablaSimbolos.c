@@ -1,45 +1,135 @@
 #include <stdio.h>
 #include <string.h>
 #include "tablaSimbolos.h"
+#include <stdlib.h>
+#include <stdbool.h>
+#include "ast.h"
+#include "semantico.h"
 
 extern int yylineno; 
 
+
 int CANTSimbolos = 0;
-TS tablaSimbolos[100];
 
+bool vacia() {
+    return pila == NULL;
+}
 
-// TODO: aca cuando agregemos ambientes tenmos qe checkear
-// porqe ahora con esto no hay forma de tener 2 variables con el mismo nombre
-// solamente existe una si hay 2 explota.
-int agregarSimbolo(enum TipoDato tipo, char *nombre, int linea) {
+void inicializarTabla() {
+    CANTSimbolos = 0;
+    pila = NULL;
+}
+
+void abrirNivel() {
+    TS *nuevo = malloc(sizeof(TS));
+
+    nuevo->nivel = (pila == NULL) ? 0 : pila->nivel + 1;
+    nuevo->simbolos = NULL;
+    nuevo->sig = pila;
+
+    pila = nuevo;
+}
+
+void cerrarNivel() {
+    if (pila == NULL) {
+        printf("Error: no hay niveles abiertos para cerrar\n");
+        return;
+    }
+
+    Simbolo *actual = pila->simbolos;
+
+    while (actual != NULL) {
+        Simbolo *aux = actual;
+        actual = actual->sig;
+        free(aux);
+        CANTSimbolos--;
+    }
+
+    TS *nivelActual = pila;
+    pila = pila->sig;
+
+    free(nivelActual);
+}
+
+int agregarSimbolo(enum TipoDato tipo, char *nombre, int linea){
     if (CANTSimbolos >= 100) {
-        printf("Error linea %d: tabla de simbolos llena (maximo 100)\n", linea);
+        printf("Error linea %d: tabla de simbolos llena\n", linea);
         return -1;
     }
-    if (buscarVariable(nombre) != -1) {
+
+    if (pila == NULL) {
+        printf("Error: no hay ningun nivel abierto\n");
+        return -1;
+    }
+
+    if (buscarVariable(nombre, pila->nivel) != -1) {
         printf("Error linea %d: '%s' ya fue declarada\n", linea, nombre);
         return -1;
     }
-    tablaSimbolos[CANTSimbolos].nombre = nombre;
-    tablaSimbolos[CANTSimbolos].tipoDato = tipo;
-    tablaSimbolos[CANTSimbolos].valor = 0;
-    return CANTSimbolos++;
+
+    Simbolo *nuevo = malloc(sizeof(Simbolo));
+
+    nuevo->tipoDato = tipo;
+    strcpy(nuevo->nombre, nombre);
+    nuevo->linea = linea;
+    nuevo->valor = 0;
+
+    nuevo->sig = pila->simbolos;
+    pila->simbolos = nuevo;
+
+    CANTSimbolos++;
+
+    return CANTSimbolos - 1;
 }
 
-int buscarVariable(char *nombre) {
-    for (int i = CANTSimbolos - 1; i >= 0; i--) {
-        if (strcmp(tablaSimbolos[i].nombre, nombre) == 0) {
-            return i;
+int buscarVariable(char *nombre, int nivel) {
+    TS *nivelActual = pila;
+
+    while (nivelActual != NULL) {
+
+        if (nivelActual->nivel == nivel) {
+
+            Simbolo *simboloActual = nivelActual->simbolos;
+
+            while (simboloActual != NULL) {
+
+                if (strcmp(simboloActual->nombre, nombre) == 0) {
+                    return 1;
+                }
+
+                simboloActual = simboloActual->sig;
+            }
+
+            return -1;
         }
+
+        nivelActual = nivelActual->sig;
     }
+
     return -1;
 }
 void imprimirTabla(void) {
     printf("\n--- TABLA DE SIMBOLOS ---\n");
-    for (int i = 0; i < CANTSimbolos; i++) {
-        printf("[%d] %-8s : %-4s = %d\n", i,
-               tablaSimbolos[i].nombre,
-               nombreTipo(tablaSimbolos[i].tipoDato),
-               tablaSimbolos[i].valor);
+
+    TS *nivelActual = pila;
+
+    while (nivelActual != NULL) {
+
+        printf("\nNivel %d:\n", nivelActual->nivel);
+
+        Simbolo *simboloActual = nivelActual->simbolos;
+
+        while (simboloActual != NULL) {
+
+            printf("[%d] %-8s : %-4s = %d\n",
+                   simboloActual->linea,
+                   simboloActual->nombre,
+                   nombreTipo(simboloActual->tipoDato),
+                   simboloActual->valor);
+
+            simboloActual = simboloActual->sig;
+        }
+
+        nivelActual = nivelActual->sig;
     }
 }
