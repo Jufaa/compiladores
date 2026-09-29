@@ -1,6 +1,7 @@
 #include "semantico.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "tablaSimbolos.h"
 
 int hayErrores = 0;
 
@@ -16,7 +17,7 @@ void resolverNombres(Nodo *nodo) {
         }
 
         case N_DECL: {
-            int indice = agregarSimbolo(nodo->tipoDato, nodo->nombre, nodo->linea);
+            int indice = agregarSimbolo(C_VAR, nodo->tipoDato, nodo->nombre, nodo->linea);
             if (indice == -1) {
                 hayErrores = 1;
             }
