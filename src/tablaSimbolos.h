@@ -23,7 +23,6 @@ typedef struct TS {
 } TS;
 
 extern TS *pila;
-TS *pila = NULL;
 extern int CANTSimbolos;
 
 void inicializarTabla();

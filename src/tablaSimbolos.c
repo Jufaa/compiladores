@@ -66,7 +66,7 @@ Simbolo *agregarSimbolo(enum TipoSimbolos tipoVariable,
         return NULL;
     }
 
-    if (buscarSimbolo(nombre) != NULL) {
+    if (buscarSimboloEnUnNivel(nombre, pila->nivel) == 1) {
         printf("Error linea %d: '%s' ya fue declarada\n",
                linea, nombre);
         return NULL;
@@ -93,6 +93,7 @@ Simbolo *agregarSimbolo(enum TipoSimbolos tipoVariable,
     return nuevo;
 }
 
+//1 encontrado - 0 nivel existe pero no esta, -1=nivel noexiste
 int buscarSimboloEnUnNivel(char *nombre, int nivel) {
     TS *nivelActual = pila;
 
@@ -111,7 +112,7 @@ int buscarSimboloEnUnNivel(char *nombre, int nivel) {
                 simboloActual = simboloActual->sig;
             }
 
-            return -1;
+            return 0;
         }
 
         nivelActual = nivelActual->sig;
@@ -119,6 +120,7 @@ int buscarSimboloEnUnNivel(char *nombre, int nivel) {
 
     return -1;
 }
+
 Simbolo *buscarSimbolo(char *nombre) {
     TS *nivelActual = pila;
 
