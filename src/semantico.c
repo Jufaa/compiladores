@@ -16,7 +16,11 @@ void resolverNombres(Nodo *nodo) {
         }
 
         case N_DECL: {
-            int indice = agregarSimbolo(nodo->tipoDato, nodo->nombre, nodo->linea);
+        int indice = agregarSimbolo(
+                nodo->tipoDato,
+                nodo->nombre,
+                nodo->linea
+            );
             if (indice == -1) {
                 hayErrores = 1;
             }
@@ -25,7 +29,7 @@ void resolverNombres(Nodo *nodo) {
         }
 
         case N_ID: {
-            int indice = buscarVariable(nodo->nombre);
+            int indice = buscarVariable(nodo->nombre, pila->nivel);
             if (indice == -1) {
                 printf("Error linea %d: variable '%s' no declarada\n", nodo->linea, nodo->nombre);
                 hayErrores = 1;

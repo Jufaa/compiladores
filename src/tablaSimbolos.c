@@ -10,7 +10,7 @@ extern int yylineno;
 
 
 int CANTSimbolos = 0;
-
+TS *pila = NULL;
 bool vacia() {
     return pila == NULL;
 }
@@ -51,25 +51,36 @@ void cerrarNivel() {
     free(nivelActual);
 }
 
-int agregarSimbolo(enum TipoDato tipo, char *nombre, int linea){
+Simbolo *agregarSimbolo(enum TipoSimbolos tipoVariable,
+                        enum TipoDato tipoDato,
+                        char *nombre,
+                        int linea) {
+
     if (CANTSimbolos >= 100) {
         printf("Error linea %d: tabla de simbolos llena\n", linea);
-        return -1;
+        return NULL;
     }
 
     if (pila == NULL) {
         printf("Error: no hay ningun nivel abierto\n");
-        return -1;
+        return NULL;
     }
 
-    if (buscarVariable(nombre, pila->nivel) != -1) {
-        printf("Error linea %d: '%s' ya fue declarada\n", linea, nombre);
-        return -1;
+    if (buscarSimbolo(nombre) != NULL) {
+        printf("Error linea %d: '%s' ya fue declarada\n",
+               linea, nombre);
+        return NULL;
     }
 
     Simbolo *nuevo = malloc(sizeof(Simbolo));
 
-    nuevo->tipoDato = tipo;
+    if (nuevo == NULL) {
+        printf("Error: no se pudo reservar memoria\n");
+        return NULL;
+    }
+
+    nuevo->tipoVariable = tipoVariable;
+    nuevo->tipoDato = tipoDato;
     strcpy(nuevo->nombre, nombre);
     nuevo->linea = linea;
     nuevo->valor = 0;
@@ -79,10 +90,10 @@ int agregarSimbolo(enum TipoDato tipo, char *nombre, int linea){
 
     CANTSimbolos++;
 
-    return CANTSimbolos - 1;
+    return nuevo;
 }
 
-int buscarVariable(char *nombre, int nivel) {
+int buscarSimboloEnUnNivel(char *nombre, int nivel) {
     TS *nivelActual = pila;
 
     while (nivelActual != NULL) {
@@ -107,6 +118,27 @@ int buscarVariable(char *nombre, int nivel) {
     }
 
     return -1;
+}
+Simbolo *buscarSimbolo(char *nombre) {
+    TS *nivelActual = pila;
+
+    while (nivelActual != NULL) {
+
+        Simbolo *simboloActual = nivelActual->simbolos;
+
+        while (simboloActual != NULL) {
+
+            if (strcmp(simboloActual->nombre, nombre) == 0) {
+                return simboloActual;
+            }
+
+            simboloActual = simboloActual->sig;
+        }
+
+        nivelActual = nivelActual->sig;
+    }
+
+    return NULL;
 }
 void imprimirTabla(void) {
     printf("\n--- TABLA DE SIMBOLOS ---\n");
