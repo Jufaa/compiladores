@@ -4,6 +4,18 @@
 
 int hayErrores = 0;
 
+int contarParametros(Nodo *nodo) {
+    if (nodo == NULL) return 0;
+
+    switch (nodo->tipoNodo) {
+        case N_PARAM:
+            return 1 + contarParametros(nodo->sig);
+        default:
+            return 0;
+    }
+}
+
+
 void resolverNombres(Nodo *nodo) {
     if (nodo == NULL) return;
 
