@@ -16,38 +16,45 @@ void resolverNombres(Nodo *nodo) {
         }
 
         case N_DECL: {
-        int indice = agregarSimbolo(
-                nodo->tipoDato,
-                nodo->nombre,
-                nodo->linea
-            );
-            if (indice == -1) {
+        Simbolo *newSimbolo = agregarSimbolo(V_LOCAL, nodo->tipoDato, nodo->nombre, nodo->linea);
+            if (newSimbolo == NULL) {
                 hayErrores = 1;
+            } else {
+                nodo->simbolo = newSimbolo;
             }
-            nodo->indiceEnLaTablaSimbolos = indice;
             break;
-        }
+        }   
 
         case N_ID: {
-            int indice = buscarVariable(nodo->nombre, pila->nivel);
-            if (indice == -1) {
+            Simbolo *simbolo = buscarSimbolo(nodo->nombre);
+            if (simbolo == NULL) {
                 printf("Error linea %d: variable '%s' no declarada\n", nodo->linea, nodo->nombre);
                 hayErrores = 1;
             }
-            nodo->indiceEnLaTablaSimbolos = indice;
+            nodo->simbolo = simbolo;
             break;
         }
 
         case N_ASIGN: {
             resolverNombres(nodo->izq);
-            int indice = buscarVariable(nodo->nombre);
-            if (indice == -1) {
+            Simbolo *simbolo = buscarSimbolo(nodo->nombre);
+            if (simbolo == NULL) {
                 printf("Error linea %d: variable '%s' no declarada\n", nodo->linea, nodo->nombre);
                 hayErrores = 1;
             }
-            nodo->indiceEnLaTablaSimbolos = indice;
+            nodo->simbolo = simbolo;
             break;
         }
+        case N_IF:
+        case N_IFELSE:
+        case N_WHILE:
+        case N_RETURN:
+        case N_BLOQUE:
+        case N_METODO:
+        case N_PARAM:
+        case N_LLAMADA:
+            resolverNombres(nodo->izq);
+            resolverNombres(nodo->der);     
 
         case N_SUMA:
         case N_MULT: {
@@ -80,10 +87,10 @@ enum TipoDato chequearTipos(Nodo *nodo) {
             return nodo->tipoDato = T_BOOL;
 
         case N_ID: {
-            if (nodo->indiceEnLaTablaSimbolos == -1) {
+            if (nodo->simbolo == NULL) {
                 return nodo->tipoDato = T_ERROR;
             }
-            return nodo->tipoDato = tablaSimbolos[nodo->indiceEnLaTablaSimbolos].tipoDato;
+            return nodo->tipoDato = nodo->simbolo->tipoDato;
         }
 
         case N_SUMA:
@@ -105,14 +112,14 @@ enum TipoDato chequearTipos(Nodo *nodo) {
         case N_ASIGN: {
             enum TipoDato tipoIzq = chequearTipos(nodo->izq);
 
-            if (nodo->indiceEnLaTablaSimbolos == -1) {
+            if (nodo->simbolo == NULL) {
                 return nodo->tipoDato = T_ERROR;
             }
             if (tipoIzq == T_ERROR) {
                 return nodo->tipoDato = T_ERROR;
             }
 
-            enum TipoDato tipoVariable = tablaSimbolos[nodo->indiceEnLaTablaSimbolos].tipoDato;
+            enum TipoDato tipoVariable = nodo->simbolo->tipoDato;
             if (tipoVariable != tipoIzq) {
                 printf("Error linea %d: tipo incompatible en la asignacion a '%s'\n",
                        nodo->linea, nodo->nombre);

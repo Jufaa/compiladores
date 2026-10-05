@@ -18,11 +18,11 @@ int evaluar(Nodo *nodo){
         return evaluar(nodo->izq) + evaluar(nodo->der);
     case N_ASIGN:{
         int v = evaluar(nodo->izq);
-        tablaSimbolos[nodo->indiceEnLaTablaSimbolos].valor = v;     
+        nodo->simbolo->valor = v;     
         return v;
     }
     case N_ID:
-        return tablaSimbolos[nodo->indiceEnLaTablaSimbolos].valor;
+        return nodo->simbolo->valor;
     case N_SEQ:
         evaluar(nodo->izq);
         evaluar(nodo->der);

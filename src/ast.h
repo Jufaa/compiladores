@@ -18,7 +18,7 @@ enum TipoDato {T_INT, T_BOOL, T_FLOAT, T_ERROR, T_VOID};
 typedef struct Nodo {
     enum TipoNodo tipoNodo;
     enum TipoDato tipoDato;
-    int indiceEnLaTablaSimbolos;
+    Simbolo *simbolo; // esto lo cambio por simbol antes era un int al array
     char* nombre;
     int valor;
     float valorFloat; //TODO: q onda aca

@@ -37,7 +37,7 @@ static int generar(Nodo *nodo) {
 
         case N_ID: {
             int r = nuevoRegistro();
-            emitir(INS_LOAD_MEM, r, nodo->indiceEnLaTablaSimbolos, 0);
+            emitir(INS_LOAD_MEM, r, nodo->simbolo->indice, 0);
             return r;
         }
 
@@ -53,7 +53,7 @@ static int generar(Nodo *nodo) {
 
         case N_ASIGN: {
             int rValor = generar(nodo->izq);
-            emitir(INS_STORE_MEM, nodo->indiceEnLaTablaSimbolos, rValor, 0);
+            emitir(INS_STORE_MEM, nodo->simbolo->indice, rValor, 0);
             return -1;
         }
 
