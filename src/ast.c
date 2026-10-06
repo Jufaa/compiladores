@@ -2,13 +2,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ast.h"
+#include "tablaSimbolos.h"
 #define MAX_SENTENCIAS 512
 
-Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre, int valor, Nodo *izq, Nodo *der, int linea) {
+Nodo *crearNodo(enum TipoNodo tipo, Simbolo* simbolo, char* nombre, int valor, Nodo *izq, Nodo *der, int linea) {
     Nodo *nuevoNodo = (Nodo *)malloc(sizeof(Nodo));
     nuevoNodo->tipoNodo = tipo;
     nuevoNodo->tipoDato = T_ERROR;
-    nuevoNodo->indiceEnLaTablaSimbolos = indiceEnLaTablaSimbolos;
+    nuevoNodo->simbolo = simbolo;
     nuevoNodo->nombre = nombre;
     nuevoNodo->valor = valor;
     nuevoNodo->valorFloat = 0;
@@ -19,7 +20,7 @@ Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre, i
 }
 
 Nodo *crearNodoDecl(char *nombre, enum TipoDato tipo, int linea) {
-    Nodo *nuevoNodo = crearNodo(N_DECL, -1, nombre, 0, NULL, NULL, linea);
+    Nodo *nuevoNodo = crearNodo(N_DECL, NULL, nombre, 0, NULL, NULL, linea);
     nuevoNodo->tipoDato = tipo;
     return nuevoNodo;
 }

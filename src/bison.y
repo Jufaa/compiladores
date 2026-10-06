@@ -48,26 +48,26 @@ Nodo *raiz = NULL;
 
 %%
     PROGRAMA: VAR_DECLS METHOD_DECLS
-          { raiz = crearNodo(N_SEQ, -1, NULL, 0, $1, $2, yylineno); }
+          { raiz = crearNodo(N_SEQ, NULL, NULL, 0, $1, $2, yylineno); }
     ;
 
     VAR_DECLS: %empty              { $$ = NULL; }
-            | VAR_DECLS VAR_DECL  { $$ = ($1 == NULL) ? $2 : crearNodo(N_SEQ, -1, NULL, 0, $1, $2, yylineno); }
+            | VAR_DECLS VAR_DECL  { $$ = ($1 == NULL) ? $2 : crearNodo(N_SEQ, NULL, NULL, 0, $1, $2, yylineno); }
     ;
     
     VAR_DECL: TYPE LISTA_IDS TPUNTOCOMA  { $$ = $2; }
     ;
 
     LISTA_IDS: TID                  { $$ = crearNodoDecl($1, tipoActual, yylineno); }
-            | LISTA_IDS TCOMA TID  { $$ = crearNodo(N_SEQ, -1, NULL, 0, $1, crearNodoDecl($3, tipoActual, yylineno), yylineno); }
+            | LISTA_IDS TCOMA TID  { $$ = crearNodo(N_SEQ, NULL, NULL, 0, $1, crearNodoDecl($3, tipoActual, yylineno), yylineno); }
     ;
 
 
     METHOD_DECLS: METHOD_DECL               { $$ = $1; }
-                | METHOD_DECLS METHOD_DECL  { $$ = crearNodo(N_SEQ, -1, NULL, 0, $1, $2, yylineno); }
+                | METHOD_DECLS METHOD_DECL  { $$ = crearNodo(N_SEQ, NULL, NULL, 0, $1, $2, yylineno); }
     ;
-    METHOD_DECL: TYPE TID TPA PARAMS TPC BLOCK { $$ = crearNodo(N_METODO, -1, $2, 0, $4, $6, yylineno); $$->tipoDato = $1; }
-            | TVOID TID TPA PARAMS TPC BLOCK { $$ = crearNodo(N_METODO, -1, $2, 0, $4, $6, yylineno); $$->tipoDato = T_VOID; }
+    METHOD_DECL: TYPE TID TPA PARAMS TPC BLOCK { $$ = crearNodo(N_METODO, NULL, $2, 0, $4, $6, yylineno); $$->tipoDato = $1; }
+            | TVOID TID TPA PARAMS TPC BLOCK { $$ = crearNodo(N_METODO, NULL, $2, 0, $4, $6, yylineno); $$->tipoDato = T_VOID; }
     ;
 
     PARAMS: %empty        { $$ = NULL; }
@@ -75,15 +75,15 @@ Nodo *raiz = NULL;
     ;
 
     LISTA_PARAMS: TYPE TID
-                    { $$ = crearNodo(N_PARAM, -1, $2, 0, NULL, NULL, yylineno); $$->tipoDato = $1; }
+                    { $$ = crearNodo(N_PARAM, NULL, $2, 0, NULL, NULL, yylineno); $$->tipoDato = $1; }
                 | LISTA_PARAMS TCOMA TYPE TID
-                    { Nodo *p = crearNodo(N_PARAM, -1, $4, 0, NULL, NULL, yylineno);
+                    { Nodo *p = crearNodo(N_PARAM, NULL, $4, 0, NULL, NULL, yylineno);
                     p->tipoDato = $3;
-                    $$ = crearNodo(N_SEQ, -1, NULL, 0, $1, p, yylineno); }
+                    $$ = crearNodo(N_SEQ, NULL, NULL, 0, $1, p, yylineno); }
     ;
 
     BLOCK: TLLAVEA VAR_DECLS STATEMENTS TLLAVEC
-            { $$ = crearNodo(N_BLOQUE, -1, NULL, 0, $2, $3, yylineno); }
+            { $$ = crearNodo(N_BLOQUE, NULL, NULL, 0, $2, $3, yylineno); }
     ;
 
 
@@ -93,10 +93,10 @@ Nodo *raiz = NULL;
     ;
 
     STATEMENTS: %empty                { $$ = NULL; }
-            | STATEMENTS STATEMENT  { $$ = ($1 == NULL) ? $2 : crearNodo(N_SEQ, -1, NULL, 0, $1, $2, yylineno); }
+            | STATEMENTS STATEMENT  { $$ = ($1 == NULL) ? $2 : crearNodo(N_SEQ, NULL, NULL, 0, $1, $2, yylineno); }
     ;
 
-    STATEMENT: TID TASIGNACION EXPR TPUNTOCOMA  { $$ = crearNodo(N_ASIGN, -1, $1, 0, $3, NULL, yylineno); }
+    STATEMENT: TID TASIGNACION EXPR TPUNTOCOMA  { $$ = crearNodo(N_ASIGN, NULL, $1, 0, $3, NULL, yylineno); }
             | METHOD_CALL TPUNTOCOMA           { $$ = $1; }
             | SENTENCE                         { $$ = $1; }
             | BUCLE                            { $$ = $1; }
@@ -106,20 +106,20 @@ Nodo *raiz = NULL;
     ;
 
     SENTENCE: TIF TPA EXPR TPC BLOCK
-                { $$ = crearNodo(N_IF, -1, NULL, 0, $3, $5, yylineno); }
+                { $$ = crearNodo(N_IF, NULL, NULL, 0, $3, $5, yylineno); }
             | TIF TPA EXPR TPC BLOCK TELSE BLOCK
-                { Nodo *ramas = crearNodo(N_SEQ, -1, NULL, 0, $5, $7, yylineno);
-                $$ = crearNodo(N_IFELSE, -1, NULL, 0, $3, ramas, yylineno); }
+                { Nodo *ramas = crearNodo(N_SEQ, NULL, NULL, 0, $5, $7, yylineno);
+                $$ = crearNodo(N_IFELSE, NULL, NULL, 0, $3, ramas, yylineno); }
     ;
 
 
-    RETURNS: TRETURN EXPR TPUNTOCOMA  { $$ = crearNodo(N_RETURN, -1, NULL, 0, $2, NULL, yylineno); }
-        | TRETURN TPUNTOCOMA       { $$ = crearNodo(N_RETURN, -1, NULL, 0, NULL, NULL, yylineno); }
+    RETURNS: TRETURN EXPR TPUNTOCOMA  { $$ = crearNodo(N_RETURN, NULL, NULL, 0, $2, NULL, yylineno); }
+        | TRETURN TPUNTOCOMA       { $$ = crearNodo(N_RETURN, NULL, NULL, 0, NULL, NULL, yylineno); }
     ;
 
-    BUCLE: TWHILE TPA EXPR TPC BLOCK  { $$ = crearNodo(N_WHILE, -1, NULL, 0, $3, $5, yylineno); }
+    BUCLE: TWHILE TPA EXPR TPC BLOCK  { $$ = crearNodo(N_WHILE, NULL, NULL, 0, $3, $5, yylineno); }
     ;
-    METHOD_CALL: TID TPA ARGS TPC  { $$ = crearNodo(N_LLAMADA, -1, $1, 0, $3, NULL, yylineno); }
+    METHOD_CALL: TID TPA ARGS TPC  { $$ = crearNodo(N_LLAMADA, NULL, $1, 0, $3, NULL, yylineno); }
     ;
 
     ARGS: %empty  {$$ = NULL;}
@@ -127,32 +127,32 @@ Nodo *raiz = NULL;
     ;
 
     LISTA_ARGS: EXPR {$$ = $1;}
-              | LISTA_ARGS TCOMA EXPR  { $$ = crearNodo(N_SEQ, -1, NULL, 0, $1, $3, yylineno); }
+              | LISTA_ARGS TCOMA EXPR  { $$ = crearNodo(N_SEQ, NULL, NULL, 0, $1, $3, yylineno); }
     ;
 
-    EXPR: TID                       { $$ = crearNodo(N_ID, -1, $1, 0, NULL, NULL, yylineno); }
+    EXPR: TID                       { $$ = crearNodo(N_ID, NULL, $1, 0, NULL, NULL, yylineno); }
         | METHOD_CALL               { $$ = $1; }
         | LITERAL                   { $$ = $1; }
-        | EXPR TSUMA EXPR           { $$ = crearNodo(N_SUMA, -1, NULL, 0, $1, $3, yylineno); }
-        | EXPR TRESTA EXPR          { $$ = crearNodo(N_RESTA, -1, NULL, 0, $1, $3, yylineno); }
-        | EXPR TMULTIPLICACION EXPR { $$ = crearNodo(N_MULT, -1, NULL, 0, $1, $3, yylineno); }
-        | EXPR TDIVISION EXPR       { $$ = crearNodo(N_DIV, -1, NULL, 0, $1, $3, yylineno); }
-        | EXPR TMODULO EXPR         { $$ = crearNodo(N_MOD, -1, NULL, 0, $1, $3, yylineno); }
-        | EXPR TMENOR EXPR          { $$ = crearNodo(N_MENOR, -1, NULL, 0, $1, $3, yylineno); }
-        | EXPR TMAYOR EXPR          { $$ = crearNodo(N_MAYOR, -1, NULL, 0, $1, $3, yylineno); }
-        | EXPR TDOBLEIGUAL EXPR     { $$ = crearNodo(N_COMPARACION, -1, NULL, 0, $1, $3, yylineno); }
-        | EXPR TAND EXPR            { $$ = crearNodo(N_AND, -1, NULL, 0, $1, $3, yylineno); }
-        | EXPR TOR EXPR             { $$ = crearNodo(N_OR, -1, NULL, 0, $1, $3, yylineno); }
-        | TRESTA EXPR %prec UMINUS  { $$ = crearNodo(N_NEG, -1, NULL, 0, $2, NULL, yylineno); }
-        | TNOT EXPR                 { $$ = crearNodo(N_NOT, -1, NULL, 0, $2, NULL, yylineno); }
+        | EXPR TSUMA EXPR           { $$ = crearNodo(N_SUMA, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TRESTA EXPR          { $$ = crearNodo(N_RESTA, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TMULTIPLICACION EXPR { $$ = crearNodo(N_MULT, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TDIVISION EXPR       { $$ = crearNodo(N_DIV, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TMODULO EXPR         { $$ = crearNodo(N_MOD, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TMENOR EXPR          { $$ = crearNodo(N_MENOR, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TMAYOR EXPR          { $$ = crearNodo(N_MAYOR, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TDOBLEIGUAL EXPR     { $$ = crearNodo(N_COMPARACION, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TAND EXPR            { $$ = crearNodo(N_AND, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TOR EXPR             { $$ = crearNodo(N_OR, NULL, NULL, 0, $1, $3, yylineno); }
+        | TRESTA EXPR %prec UMINUS  { $$ = crearNodo(N_NEG, NULL, NULL, 0, $2, NULL, yylineno); }
+        | TNOT EXPR                 { $$ = crearNodo(N_NOT, NULL, NULL, 0, $2, NULL, yylineno); }
         | TPA EXPR TPC              { $$ = $2; }
     ;
 
 
-    LITERAL: TNUM      { $$ = crearNodo(N_NUM, -1, NULL, $1, NULL, NULL, yylineno); }
-           | TFLOATNUM { $$ = crearNodo(N_FLOAT, -1, NULL, 0, NULL, NULL, yylineno); $$->valorFloat = $1; }
-           | TTRUE     { $$ = crearNodo(N_BOOL, -1, NULL, 1, NULL, NULL, yylineno); }
-           | TFALSE    { $$ = crearNodo(N_BOOL, -1, NULL, 0, NULL, NULL, yylineno); }
+    LITERAL: TNUM      { $$ = crearNodo(N_NUM, NULL, NULL, $1, NULL, NULL, yylineno); }
+           | TFLOATNUM { $$ = crearNodo(N_FLOAT, NULL, NULL, 0, NULL, NULL, yylineno); $$->valorFloat = $1; }
+           | TTRUE     { $$ = crearNodo(N_BOOL, NULL, NULL, 1, NULL, NULL, yylineno); }
+           | TFALSE    { $$ = crearNodo(N_BOOL, NULL, NULL, 0, NULL, NULL, yylineno); }
     ;
 
 %%

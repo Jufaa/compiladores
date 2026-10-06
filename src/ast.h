@@ -27,7 +27,7 @@ typedef struct Nodo {
     int linea;
 } Nodo;
 
-Nodo *crearNodo(enum TipoNodo tipo, int indiceEnLaTablaSimbolos, char* nombre, int valor, Nodo *izq, Nodo *der, int linea);
+Nodo *crearNodo(enum TipoNodo tipo, Simbolo* simbolo, char* nombre, int valor, Nodo *izq, Nodo *der, int linea);
 Nodo *crearNodoDecl(char *nombre, enum TipoDato tipo, int linea);
 void imprimirArbol(Nodo *nodo, int nivel);
 char *nombreNodo(enum TipoNodo t);
