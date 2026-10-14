@@ -37,7 +37,7 @@ static int generar(Nodo *nodo) {
 
         case N_ID: {
             int r = nuevoRegistro();
-            emitir(INS_LOAD_MEM, r, nodo->simbolo->indice, 0);
+            emitir(INS_LOAD_MEM, r, nodo->simbolo->valor, 0);
             return r;
         }
 
@@ -53,7 +53,7 @@ static int generar(Nodo *nodo) {
 
         case N_ASIGN: {
             int rValor = generar(nodo->izq);
-            emitir(INS_STORE_MEM, nodo->simbolo->indice, rValor, 0);
+            emitir(INS_STORE_MEM, nodo->simbolo->valor, rValor, 0);
             return -1;
         }
 
@@ -89,8 +89,8 @@ static char *nombreOp(enum TipoOp op) {
     }
 }
 
-static char *nombreVariable(int indice) {
-    if (indice >= 0 && indice < CANTSimbolos) return tablaSimbolos[indice].nombre;
+static char *nombreVariable(char* nombre) {
+    if (nombre != "") return buscarSimbolo(nombre)->nombre;
     return "?";
 }
 

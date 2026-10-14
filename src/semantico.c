@@ -65,6 +65,7 @@ void resolverNombres(Nodo *nodo) {
             break;
         }
         case N_METODO:{
+            //TODO: checkear el nombre de la funcion 
             Simbolo *funcion = agregarSimbolo(V_FUNCION, nodo->tipoDato, nodo->nombre, nodo->linea);
             if (funcion == NULL) {
                 hayErrores = 1;
