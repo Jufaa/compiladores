@@ -52,3 +52,37 @@ lo q tengo duda es esto para asignalr la pos ala varaible mov $1, -16(noseque)
 la pila de niveles una busqeda global otra por bloqe
 el simbolo tenga la etieta para diferenciar si es una funcion o variable dentro de las variables tenga las locales y las globales
 o un parametro
+ç
+
+
+
+
+
+
+
+
+
+
+
+
+ARRANCOF
+PROCESO LA F LOCA
+TERMINO
+
+int x = f(x)
+== 
+call f
+
+
+while(x>3){
+    
+    x = x - 1;
+}
+JMPTrue donde arranca el while
+LABEL condicion
+JMPFalse condicion si es falso salta al fin
+lo de adentro del while
+JMP arriba del todo
+LABEL fin
+
+
