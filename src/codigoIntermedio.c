@@ -6,9 +6,14 @@ int CANTInstrucciones = 0;
 Instruccion instrucciones[100];
 
 static int CANTRegistros = 0;
+static int CANTEtiquetas = 0;
 
 static int nuevoRegistro() {
     return CANTRegistros++;
+}
+
+static int nuevaEtiqueta() {
+    return CANTEtiquetas++;
 }
 
 static void emitir(enum TipoOp op, int res, int arg1, int arg2, float valorFloat, char* nombre) {
@@ -176,7 +181,44 @@ static int generar(Nodo *nodo) {
             generar(nodo->der);
             return -1;
         }
+        
+        case N_BLOQUE: {
+            generar(nodo->izq); // declaraciones
+            generar(nodo->der); // sentencias
+            return -1;
+        }
+        case N_IF:{
+            int fin = nuevaEtiqueta(); 
+            int rCond = generar(nodo->izq);
+            emitir(JMPFalse, rCond, fin, 0, 0, NULL);
+            generar(nodo->der);
+            emitir(LABEL, fin, 0, 0, 0, NULL);
+            return -1;
 
+        }
+        case N_IFELSE:{
+            int fin = nuevaEtiqueta(); 
+            int lElse = nuevaEtiqueta(); 
+            int rCond = generar(nodo->izq);
+            emitir(JMPFalse, rCond, lElse, 0, 0, NULL);
+            generar(nodo->der->izq); // rama true
+            emitir(JMP, fin, 0, 0, 0, NULL);
+            emitir(LABEL, lElse, 0, 0, 0, NULL);
+            generar(nodo->der->der); // rama falsa
+            emitir(LABEL, fin, 0, 0, 0, NULL);
+            return -1;
+        }
+        case N_WHILE: {
+            int inicio = nuevaEtiqueta();          
+            int fin = nuevaEtiqueta();             
+            emitir(LABEL, inicio, 0, 0, 0, NULL);
+            int rCondicion = generar(nodo->izq);
+            emitir(JMPFalse, rCondicion, fin, 0, 0, NULL);
+            generar(nodo->der);                    
+            emitir(JMP, inicio, 0, 0, 0, NULL);
+            emitir(LABEL, fin, 0, 0, 0, NULL);    
+            return -1;                             
+        }
         case N_DECL:
             return -1;
 
@@ -189,24 +231,41 @@ static int generar(Nodo *nodo) {
 void generarCodigo(Nodo *nodo) {
     CANTInstrucciones = 0;
     CANTRegistros = 0;
+    CANTEtiquetas = 0;
     generar(nodo);
 }
 
-static char *nombreOp(enum TipoOp op) {
+static const char *nombreOp(enum TipoOp op) {
     switch (op) {
-        case INS_LOAD_CONST: return "Load_Const";
-        case INS_LOAD_MEM:   return "Load_Mem";
-        case INS_STORE_MEM:  return "Store_Mem";
-        case INS_SUMA_REG:   return "Suma_Reg";
-        case INS_MUL_REG:    return "Mul_Reg";
-        case INS_RESTA_REG:  return "Resta_Reg";
-        default:             return "?";
+        case LABEL:          return "LABEL";
+        case JMP:            return "JMP";
+        case JMPTrue:        return "JMPTrue";
+        case JMPFalse:       return "JMPFalse";
+        case ARRANCO_F:      return "ARRANCO_F";
+        case TERMINO_F:      return "TERMINO_F";
+        case INS_PARAM:      return "PARAM";
+        case INS_LOAD_FLOAT: return "LOAD_FLOAT";
+        case INS_LOAD_INT:   return "LOAD_INT";
+        case INS_LOAD_BOOL:  return "LOAD_BOOL";
+        case INS_LOAD_MEM:   return "LOAD_MEM";
+        case INS_STORE_MEM:  return "STORE_MEM";
+        case INS_NOT_REG:
+        case INS_NOTReg:     return "NOT_REG";
+        case INS_SUMA_REG:   return "SUMA_REG";
+        case INS_MUL_REG:    return "MUL_REG";
+        case INS_DIV_REG:    return "DIV_REG";
+        case INS_MOD_REG:    return "MOD_REG";
+        case INS_COMP_REG:   return "COMP_REG";
+        case INS_MENOR_REG:  return "MENOR_REG";
+        case INS_MAYOR_REG:  return "MAYOR_REG";
+        case INS_AND_REG:    return "AND_REG";
+        case INS_OR_REG:     return "OR_REG";
+        case INS_NEG_REG:    return "NEG_REG";
+        case INS_CALL:       return "CALL";
+        case INS_RETURN:     return "RETURN";
+        case INS_RESTA_REG:  return "RESTA_REG";
+        default:             return "DESCONOCIDO";
     }
-}
-
-static char *nombreVariable(char* nombre) {
-    if (nombre != "") return buscarSimbolo(nombre)->nombre;
-    return "?";
 }
 
 void imprimirCodigo(void) {
@@ -215,19 +274,66 @@ void imprimirCodigo(void) {
         Instruccion ins = instrucciones[i];
         printf("%3d:  %-11s", i, nombreOp(ins.op));
         switch (ins.op) {
-            case INS_LOAD_CONST:
+            case LABEL:
+                printf("L%d:\n", ins.res);
+                break;
+            case JMP:
+                printf("L%d\n", ins.res);
+                break;
+            case JMPTrue:
+            case JMPFalse:
+                printf("R%d, L%d\n", ins.res, ins.arg1);
+                break;
+            case ARRANCO_F:
+            case TERMINO_F:
+                printf("%s\n", ins.nombre != NULL ? ins.nombre : "?");
+                break;
+            case INS_PARAM:
+                printf("res=%d, arg1=R%d, nombre=%s\n",
+                       ins.res, ins.arg1,
+                       ins.nombre != NULL ? ins.nombre : "?");
+                break;
+            case INS_LOAD_FLOAT:
+                printf("%g, R%d\n", ins.valorFloat, ins.res);
+                break;
+            case INS_LOAD_INT:
                 printf("%d, R%d\n", ins.arg1, ins.res);
                 break;
+            case INS_LOAD_BOOL:
+                printf("%s, R%d\n", ins.arg1 ? "true" : "false", ins.res);
+                break;
             case INS_LOAD_MEM:
-                printf("%s, R%d\n", nombreVariable(ins.arg1), ins.res);
+                printf("%s, R%d\n", ins.nombre != NULL ? ins.nombre : "?", ins.res);
                 break;
             case INS_STORE_MEM:
-                printf("R%d, %s\n", ins.arg1, nombreVariable(ins.res));
+                printf("R%d, %s\n", ins.arg1, ins.nombre != NULL ? ins.nombre : "?");
                 break;
             case INS_SUMA_REG:
-            case INS_RESTA_REG:
             case INS_MUL_REG:
-                printf("R%d, R%d, R%d\n", ins.arg1, ins.arg2, ins.res);
+            case INS_DIV_REG:
+            case INS_MOD_REG:
+            case INS_COMP_REG:
+            case INS_MENOR_REG:
+            case INS_MAYOR_REG:
+            case INS_AND_REG:
+            case INS_OR_REG:
+            case INS_RESTA_REG:
+                printf("R%d, R%d -> R%d\n", ins.arg1, ins.arg2, ins.res);
+                break;
+            case INS_NEG_REG:
+            case INS_NOT_REG:
+            case INS_NOTReg:
+                printf("R%d -> R%d\n", ins.arg1, ins.res);
+                break;
+            case INS_CALL:
+                printf("%s -> R%d\n", ins.nombre != NULL ? ins.nombre : "?", ins.res);
+                break;
+            case INS_RETURN:
+                if (ins.arg1 < 0) {
+                    printf("\n");
+                } else {
+                    printf("R%d\n", ins.arg1);
+                }
                 break;
             default:
                 printf("\n");
