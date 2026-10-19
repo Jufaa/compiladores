@@ -81,10 +81,11 @@ void resolverNombres(Nodo *nodo) {
         case N_IF:
         case N_IFELSE:
         case N_WHILE:
-        case N_BLOQUE:
-        resolverNombres(nodo->izq);
-        resolverNombres(nodo->der);     
-        
+        case N_BLOQUE:{
+            resolverNombres(nodo->izq);
+            resolverNombres(nodo->der);
+            break;  
+        }
         case N_SUMA:
         case N_MULT:
         case N_RESTA:
@@ -101,6 +102,7 @@ void resolverNombres(Nodo *nodo) {
         case N_RETURN:{
             resolverNombres(nodo->izq);
             resolverNombres(nodo->der);
+            break;
         }
         case N_PARAM:{
             Simbolo *parametros = agregarSimbolo(V_PARAM, nodo->tipoDato, nodo->nombre, nodo->linea);
@@ -287,3 +289,9 @@ enum TipoDato chequearTipos(Nodo *nodo) {
     return T_ERROR;
 }
 
+int nivelActual() {
+    if (pila == NULL) {
+        return -1;
+    }
+    return pila->nivel;
+}
