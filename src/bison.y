@@ -146,6 +146,9 @@ Nodo *raiz = NULL;
         | TRESTA EXPR %prec UMINUS  { $$ = crearNodo(N_NEG, NULL, NULL, 0, $2, NULL, yylineno); }
         | TNOT EXPR                 { $$ = crearNodo(N_NOT, NULL, NULL, 0, $2, NULL, yylineno); }
         | TPA EXPR TPC              { $$ = $2; }
+        | EXPR TNOIGUAL EXPR        { $$ = crearNodo(N_NOIGUAL, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TMENORIGUAL EXPR     { $$ = crearNodo(N_MENORIGUAL, NULL, NULL, 0, $1, $3, yylineno); }
+        | EXPR TMAYORIGUAL EXPR     { $$ = crearNodo(N_MAYORIGUAL, NULL, NULL, 0, $1, $3, yylineno); }
     ;
 
 

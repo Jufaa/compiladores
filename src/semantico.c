@@ -94,6 +94,9 @@ void resolverNombres(Nodo *nodo) {
         case N_COMPARACION:
         case N_MENOR:
         case N_MAYOR:
+        case N_NOIGUAL:
+        case N_MENORIGUAL:
+        case N_MAYORIGUAL:
         case N_AND:
         case N_OR:
         case N_NEG:
@@ -160,6 +163,9 @@ enum TipoDato chequearTipos(Nodo *nodo) {
         }
 
         case N_COMPARACION:
+        case N_NOIGUAL:
+        case N_MENORIGUAL:
+        case N_MAYORIGUAL:
         case N_MENOR:
         case N_MAYOR: {
             enum TipoDato tIzq = chequearTipos(nodo->izq);

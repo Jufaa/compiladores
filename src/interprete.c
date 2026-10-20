@@ -29,6 +29,32 @@ int evaluar(Nodo *nodo){
         return 0;
     case N_DECL:
         return 0;
+    case N_RESTA:
+        return evaluar(nodo->izq) - evaluar(nodo->der);
+    case N_DIV:
+        return evaluar(nodo->izq) / evaluar(nodo->der);
+    case N_MOD:
+        return evaluar(nodo->izq) % evaluar(nodo->der);
+    case N_COMPARACION:
+        return evaluar(nodo->izq) == evaluar(nodo->der);
+    case N_MENOR:
+        return evaluar(nodo->izq) < evaluar(nodo->der);
+    case N_MAYOR:
+        return evaluar(nodo->izq) > evaluar(nodo->der);
+    case N_NOIGUAL:
+        return evaluar(nodo->izq) != evaluar(nodo->der);
+    case N_MENORIGUAL:
+        return evaluar(nodo->izq) <= evaluar(nodo->der);
+    case N_MAYORIGUAL:
+        return evaluar(nodo->izq) >= evaluar(nodo->der);
+    case N_AND:
+        return evaluar(nodo->izq) && evaluar(nodo->der);
+    case N_OR:
+        return evaluar(nodo->izq) || evaluar(nodo->der);
+    case N_NEG:
+        return -evaluar(nodo->izq);
+    case N_NOT:
+        return !evaluar(nodo->izq);
         
     default:
         printf("Error: nodo desconocido en evaluar\n");

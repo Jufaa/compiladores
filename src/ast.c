@@ -52,6 +52,9 @@ char *nombreNodo(enum TipoNodo t) {
         case N_COMPARACION: return "==";
         case N_MENOR: return "<";
         case N_MAYOR: return ">";
+        case N_NOIGUAL: return "!=";
+        case N_MENORIGUAL: return "<=";
+        case N_MAYORIGUAL: return ">=";
         case N_AND: return "&&";
         case N_OR: return "||";
         case N_IF: return "IF";

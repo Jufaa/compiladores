@@ -116,6 +116,27 @@ static int generar(Nodo *nodo) {
             emitir(INS_MAYOR_REG, r, rIzq, rDer, 0, NULL);
             return r;
         }
+        case N_NOIGUAL:{
+            int rIzq = generar(nodo->izq);
+            int rDer = generar(nodo->der);
+            int r = nuevoRegistro();
+            emitir(INS_COMP_REG, r, rIzq, rDer, 0, NULL);
+            return r;
+        }
+        case N_MENORIGUAL:{
+            int rIzq = generar(nodo->izq);
+            int rDer = generar(nodo->der);
+            int r = nuevoRegistro();
+            emitir(INS_MENOR_REG, r, rIzq, rDer, 0, NULL);
+            return r;
+        }
+        case N_MAYORIGUAL:{
+            int rIzq = generar(nodo->izq);
+            int rDer = generar(nodo->der);
+            int r = nuevoRegistro();
+            emitir(INS_MAYOR_REG, r, rIzq, rDer, 0, NULL);
+            return r;
+        }
         case N_AND:{
             int rIzq = generar(nodo->izq);
             int rDer = generar(nodo->der);
@@ -258,6 +279,9 @@ static const char *nombreOp(enum TipoOp op) {
         case INS_COMP_REG:   return "COMP_REG";
         case INS_MENOR_REG:  return "MENOR_REG";
         case INS_MAYOR_REG:  return "MAYOR_REG";
+        case INS_NOIGUAL_REG:  return "NOIGUAL_REG";
+        case INS_MENORIGUAL_REG:  return "MENORIGUAL_REG";
+        case INS_MAYORIGUAL_REG:  return "MAYORIGUAL_REG";
         case INS_AND_REG:    return "AND_REG";
         case INS_OR_REG:     return "OR_REG";
         case INS_NEG_REG:    return "NEG_REG";
@@ -315,6 +339,9 @@ void imprimirCodigo(void) {
             case INS_COMP_REG:
             case INS_MENOR_REG:
             case INS_MAYOR_REG:
+            case INS_MENORIGUAL_REG:
+            case INS_MAYORIGUAL_REG:
+            case INS_NOIGUAL_REG:
             case INS_AND_REG:
             case INS_OR_REG:
             case INS_RESTA_REG:
