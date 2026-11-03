@@ -1,34 +1,57 @@
 #ifndef AST_H
 #define AST_H
 
+typedef struct Simbolo Simbolo;
+
 enum TipoNodo {
-    N_NUM, N_FLOAT, N_BOOL, N_ID,
-    N_SUMA, N_MULT, N_RESTA, N_DIV, N_MOD,
-    N_COMPARACION, N_MENOR, N_MAYOR,
-    N_AND, N_OR,
-    N_NEG, N_NOT,
-    N_NOIGUAL, N_MENORIGUAL, N_MAYORIGUAL,
-    N_ASIGN, N_DECL, N_SEQ,
-    N_IF, N_IFELSE, N_WHILE,
-    N_RETURN, N_BLOQUE,
-    N_METODO, N_PARAM, N_LLAMADA
+  N_NUM,
+  N_FLOAT,
+  N_BOOL,
+  N_ID,
+  N_SUMA,
+  N_MULT,
+  N_RESTA,
+  N_DIV,
+  N_MOD,
+  N_COMPARACION,
+  N_MENOR,
+  N_MAYOR,
+  N_AND,
+  N_OR,
+  N_NEG,
+  N_NOT,
+  N_NOIGUAL,
+  N_MENORIGUAL,
+  N_MAYORIGUAL,
+  N_ASIGN,
+  N_DECL,
+  N_SEQ,
+  N_IF,
+  N_IFELSE,
+  N_WHILE,
+  N_RETURN,
+  N_BLOQUE,
+  N_METODO,
+  N_PARAM,
+  N_LLAMADA
 };
 
-enum TipoDato {T_INT, T_BOOL, T_FLOAT, T_ERROR, T_VOID};
+enum TipoDato { T_INT, T_BOOL, T_FLOAT, T_ERROR, T_VOID };
 
 typedef struct Nodo {
-    enum TipoNodo tipoNodo;
-    enum TipoDato tipoDato;
-    Simbolo *simbolo; // esto lo cambio por simbol antes era un int al array
-    char* nombre;
-    int valor;
-    float valorFloat; //TODO: q onda aca
-    struct Nodo *izq;
-    struct Nodo *der;
-    int linea;
+  enum TipoNodo tipoNodo;
+  enum TipoDato tipoDato;
+  Simbolo *simbolo; // esto lo cambio por simbol antes era un int al array
+  char *nombre;
+  int valor;
+  float valorFloat; // TODO: q onda aca
+  struct Nodo *izq;
+  struct Nodo *der;
+  int linea;
 } Nodo;
 
-Nodo *crearNodo(enum TipoNodo tipo, Simbolo* simbolo, char* nombre, int valor, Nodo *izq, Nodo *der, int linea);
+Nodo *crearNodo(enum TipoNodo tipo, Simbolo *simbolo, char *nombre, int valor,
+                Nodo *izq, Nodo *der, int linea);
 Nodo *crearNodoDecl(char *nombre, enum TipoDato tipo, int linea);
 void imprimirArbol(Nodo *nodo, int nivel);
 char *nombreNodo(enum TipoNodo t);

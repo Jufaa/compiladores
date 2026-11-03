@@ -1,56 +1,65 @@
-#include <stdio.h>
 #include "ast.h"
-#include "tablaSimbolos.h"
-#include "semantico.h"
-#include "interprete.h"
 #include "codigoIntermedio.h"
+#include "interprete.h"
+#include "semantico.h"
+#include "tablaSimbolos.h"
+#include <stdio.h>
 
 extern int yyparse(void);
 extern FILE *yyin;
 extern Nodo *raiz;
 
 static int abrirEntrada(int argc, char **argv) {
-    if (argc < 2) {
-        yyin = stdin;
-        return 1;
-    }
-    yyin = fopen(argv[1], "r");
-    if (yyin == NULL) {
-        fprintf(stderr, "Error: no se pudo abrir '%s'\n", argv[1]);
-        return 0;
-    }
+  if (argc < 2) {
+    yyin = stdin;
     return 1;
+  }
+  yyin = fopen(argv[1], "r");
+  if (yyin == NULL) {
+    fprintf(stderr, "Error: no se pudo abrir '%s'\n", argv[1]);
+    return 0;
+  }
+  return 1;
 }
 
 static int abortar(void) {
-    fprintf(stderr, "Compilacion abortada por errores.\n");
-    return 1;
+  fprintf(stderr, "Compilacion abortada por errores.\n");
+  return 1;
 }
 
 int main(int argc, char **argv) {
-    if (!abrirEntrada(argc, argv)) return 1;
+  if (!abrirEntrada(argc, argv))
+    return 1;
 
-    if (yyparse() != 0) return abortar();
+  if (yyparse() != 0)
+    return abortar();
 
-    printf("\n--- ARBOL ---\n");
-    imprimirArbol(raiz, 0);
+  printf("\n--- ARBOL ---\n");
+  imprimirArbol(raiz, 0);
 
-    printf("\n--- ANALISIS SEMANTICO ---\n");
-    resolverNombres(raiz);
-    if (hayErrores) return abortar();
+  printf("\n--- ANALISIS SEMANTICO ---\n");
+  inicializarTabla();
+  abrirNivel();
+  resolverNombres(raiz);
+  if (hayErrores)
+    return abortar();
 
-    chequearTipos(raiz);
-    if (hayErrores) return abortar();
-    printf("Sin errores semanticos.\n");
+  chequearTipos(raiz);
+  if (hayErrores)
+    return abortar();
+  printf("Sin errores semanticos.\n");
 
-    printf("\n--- ARBOL ANOTADO ---\n");
-    imprimirArbol(raiz, 0);
+  printf("\n--- ARBOL ANOTADO ---\n");
+  imprimirArbol(raiz, 0);
 
-    evaluar(raiz);
-    imprimirTabla();
+  evaluar(raiz);
+  imprimirTabla();
 
-    generarCodigo(raiz);
-    imprimirCodigo();
+  if (!generarCodigo(raiz)) {
+    return abortar();
+  }
 
-    return 0;
+  imprimirCodigo();
+
+  return 0;
 }

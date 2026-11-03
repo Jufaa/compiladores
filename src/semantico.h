@@ -4,5 +4,6 @@
 #include "tablaSimbolos.h"
 void resolverNombres(Nodo *nodo);
 enum TipoDato chequearTipos(Nodo *nodo);
+int nivelActual(void);
 extern int hayErrores;
 #endif
