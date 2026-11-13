@@ -9,6 +9,8 @@ enum TipoSimbolos { V_GLOBAL, V_LOCAL, V_PARAM, V_FUNCION };
 typedef struct Simbolo {
   enum TipoSimbolos tipoVariable;
   enum TipoDato tipoDato;
+  int cantidadParametros;
+  enum TipoDato *tipoParametros;
   struct Simbolo *sig;
   char nombre[100];
   int linea;
@@ -25,10 +27,12 @@ extern TS *pila;
 extern int CANTSimbolos;
 
 void inicializarTabla();
+void liberarTabla(void);
 void abrirNivel();
 void cerrarNivel();
 Simbolo *agregarSimbolo(enum TipoSimbolos tipoVariable, enum TipoDato tipoDato,
-                        char *nombre, int linea);
+                       char *nombre, int linea, int cantidadParametros,
+                       enum TipoDato *tipoParametros);
 int buscarSimboloEnUnNivel(char *nombre, int nivel);
 bool vacia();
 Simbolo *buscarSimbolo(char *nombre);

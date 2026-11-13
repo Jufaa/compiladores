@@ -16,6 +16,40 @@ int contarParametros(Nodo *nodo) {
   return 0;
 }
 
+static void copiarTiposParametros(Nodo *nodo, enum TipoDato *tipos, int *posicion) {
+  if (nodo == NULL)
+    return;
+  if (nodo->tipoNodo == N_SEQ) {
+    copiarTiposParametros(nodo->izq, tipos, posicion);
+    copiarTiposParametros(nodo->der, tipos, posicion);
+    return;
+  }
+  tipos[(*posicion)++] = nodo->tipoDato;
+}
+
+static int chequearArgumentos(Nodo *nodo, Simbolo *funcion, int *posicion) {
+  if (nodo == NULL)
+    return 1;
+  if (nodo->tipoNodo == N_SEQ) {
+    int izquierda = chequearArgumentos(nodo->izq, funcion, posicion);
+    int derecha = chequearArgumentos(nodo->der, funcion, posicion);
+    return izquierda && derecha;
+  }
+  enum TipoDato tipo = chequearTipos(nodo);
+  int indice = (*posicion)++;
+  if (tipo == T_ERROR)
+    return 0;
+  if (indice < funcion->cantidadParametros &&
+      tipo != funcion->tipoParametros[indice]) {
+    printf("Error linea %d: argumento %d de '%s': se esperaba %s, se recibio %s\n",
+           nodo->linea, indice + 1, funcion->nombre,
+           nombreTipo(funcion->tipoParametros[indice]), nombreTipo(tipo));
+    hayErrores = 1;
+    return 0;
+  }
+  return 1;
+}
+
 void resolverNombres(Nodo *nodo) {
   if (nodo == NULL)
     return;
@@ -31,7 +65,7 @@ void resolverNombres(Nodo *nodo) {
   case N_DECL: {
     enum TipoSimbolos categoria = (nivelActual() <= 0) ? V_GLOBAL : V_LOCAL;
     Simbolo *newSimbolo =
-        agregarSimbolo(categoria, nodo->tipoDato, nodo->nombre, nodo->linea);
+        agregarSimbolo(categoria, nodo->tipoDato, nodo->nombre, nodo->linea, 0, NULL);
     if (newSimbolo == NULL) {
       hayErrores = 1;
     } else {
@@ -69,9 +103,22 @@ void resolverNombres(Nodo *nodo) {
     break;
   }
   case N_METODO: {
-    // TODO: checkear el nombre de la funcion
+    int cantidad = contarParametros(nodo->izq);
+    enum TipoDato *tipos = NULL;
+    if (cantidad > 0) {
+      tipos = malloc(sizeof(enum TipoDato) * cantidad);
+      if (tipos == NULL) {
+        printf("Error: no se pudo reservar memoria para los parametros\n");
+        hayErrores = 1;
+        break;
+      }
+      int posicion = 0;
+      copiarTiposParametros(nodo->izq, tipos, &posicion);
+    }
     Simbolo *funcion =
-        agregarSimbolo(V_FUNCION, nodo->tipoDato, nodo->nombre, nodo->linea);
+        agregarSimbolo(V_FUNCION, nodo->tipoDato, nodo->nombre, nodo->linea,
+                       cantidad, tipos);
+    free(tipos);
     if (funcion == NULL) {
       hayErrores = 1;
     } else {
@@ -85,10 +132,16 @@ void resolverNombres(Nodo *nodo) {
   }
   case N_IF:
   case N_IFELSE:
-  case N_WHILE:
-  case N_BLOQUE: {
+  case N_WHILE: {
     resolverNombres(nodo->izq);
     resolverNombres(nodo->der);
+    break;
+  }
+  case N_BLOQUE: {
+    abrirNivel();
+    resolverNombres(nodo->izq);
+    resolverNombres(nodo->der);
+    cerrarNivel();
     break;
   }
   case N_SUMA:
@@ -106,15 +159,30 @@ void resolverNombres(Nodo *nodo) {
   case N_OR:
   case N_NEG:
   case N_NOT:
-  case N_LLAMADA:
   case N_RETURN: {
     resolverNombres(nodo->izq);
     resolverNombres(nodo->der);
     break;
   }
+  case N_LLAMADA: {
+    resolverNombres(nodo->izq);
+    Simbolo *funcion = buscarSimbolo(nodo->nombre);
+    if (funcion == NULL) {
+      // Preserve forward calls; check global declarations in the type pass.
+      break;
+    } else if (funcion->tipoVariable != V_FUNCION) {
+      printf("Error linea %d: '%s' no es una funcion\n", nodo->linea,
+             nodo->nombre);
+      hayErrores = 1;
+    } else {
+      nodo->simbolo = funcion;
+      nodo->tipoDato = funcion->tipoDato;
+    }
+    break;
+  }
   case N_PARAM: {
     Simbolo *parametros =
-        agregarSimbolo(V_PARAM, nodo->tipoDato, nodo->nombre, nodo->linea);
+        agregarSimbolo(V_PARAM, nodo->tipoDato, nodo->nombre, nodo->linea, 0, NULL);
     if (parametros == NULL) {
       hayErrores = 1;
     } else {
@@ -300,14 +368,33 @@ enum TipoDato chequearTipos(Nodo *nodo) {
   }
 
   case N_LLAMADA: {
-    Simbolo *simboloFuncion = buscarSimbolo(nodo->nombre);
+    Simbolo *simboloFuncion = nodo->simbolo;
+    if (simboloFuncion == NULL)
+      simboloFuncion = buscarSimbolo(nodo->nombre);
     if (simboloFuncion == NULL) {
       printf("Error linea %d: funcion '%s' no declarada\n", nodo->linea,
              nodo->nombre);
       hayErrores = 1;
       return nodo->tipoDato = T_ERROR;
     }
-    chequearTipos(nodo->izq);
+    if (simboloFuncion->tipoVariable != V_FUNCION) {
+      printf("Error linea %d: '%s' no es una funcion\n", nodo->linea,
+             nodo->nombre);
+      hayErrores = 1;
+      return nodo->tipoDato = T_ERROR;
+    }
+    nodo->simbolo = simboloFuncion;
+    int cantidad = 0;
+    int validos = chequearArgumentos(nodo->izq, simboloFuncion, &cantidad);
+    if (cantidad != simboloFuncion->cantidadParametros) {
+      printf("Error linea %d: funcion '%s' espera %d argumentos, recibio %d\n",
+             nodo->linea, nodo->nombre, simboloFuncion->cantidadParametros,
+             cantidad);
+      hayErrores = 1;
+      validos = 0;
+    }
+    if (!validos)
+      return nodo->tipoDato = T_ERROR;
     return nodo->tipoDato = simboloFuncion->tipoDato;
   }
   case N_BLOQUE:

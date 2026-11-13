@@ -11,13 +11,36 @@ extern int yylineno;
 
 int CANTSimbolos = 0;
 TS *pila = NULL;
+static TS *nivelesCerrados = NULL;
 bool vacia() {
     return pila == NULL;
 }
 
 void inicializarTabla() {
+    liberarTabla();
+}
+
+static void liberarNiveles(TS *nivel) {
+    while (nivel != NULL) {
+        TS *siguiente = nivel->sig;
+        Simbolo *simbolo = nivel->simbolos;
+        while (simbolo != NULL) {
+            Simbolo *siguienteSimbolo = simbolo->sig;
+            free(simbolo->tipoParametros);
+            free(simbolo);
+            simbolo = siguienteSimbolo;
+        }
+        free(nivel);
+        nivel = siguiente;
+    }
+}
+
+void liberarTabla(void) {
+    liberarNiveles(pila);
+    liberarNiveles(nivelesCerrados);
     CANTSimbolos = 0;
     pila = NULL;
+    nivelesCerrados = NULL;
 }
 
 void abrirNivel() {
@@ -36,25 +59,30 @@ void cerrarNivel() {
         return;
     }
 
-    Simbolo *actual = pila->simbolos;
-
-    while (actual != NULL) {
-        Simbolo *aux = actual;
-        actual = actual->sig;
-        free(aux);
+    for (Simbolo *actual = pila->simbolos; actual != NULL; actual = actual->sig) {
         CANTSimbolos--;
     }
 
     TS *nivelActual = pila;
     pila = pila->sig;
 
-    free(nivelActual);
+    // Closed scopes are invisible, but AST nodes still reference their symbols.
+    nivelActual->sig = nivelesCerrados;
+    nivelesCerrados = nivelActual;
 }
 
 Simbolo *agregarSimbolo(enum TipoSimbolos tipoVariable,
                         enum TipoDato tipoDato,
                         char *nombre,
-                        int linea) {
+                        int linea, int cantidadParametros,
+                        enum TipoDato *tipoParametros) {
+
+    if (cantidadParametros < 0 ||
+        (cantidadParametros > 0 &&
+         (tipoVariable != V_FUNCION || tipoParametros == NULL))) {
+        printf("Error linea %d: firma de funcion invalida\n", linea);
+        return NULL;
+    }
 
     if (CANTSimbolos >= 100) {
         printf("Error linea %d: tabla de simbolos llena\n", linea);
@@ -81,6 +109,18 @@ Simbolo *agregarSimbolo(enum TipoSimbolos tipoVariable,
 
     nuevo->tipoVariable = tipoVariable;
     nuevo->tipoDato = tipoDato;
+    nuevo->cantidadParametros = cantidadParametros;
+    nuevo->tipoParametros = NULL;
+    if (cantidadParametros > 0) {
+        nuevo->tipoParametros = malloc(sizeof(enum TipoDato) * cantidadParametros);
+        if (nuevo->tipoParametros == NULL) {
+            printf("Error: no se pudo reservar memoria para los parametros\n");
+            free(nuevo);
+            return NULL;
+        }
+        memcpy(nuevo->tipoParametros, tipoParametros,
+               sizeof(enum TipoDato) * cantidadParametros);
+    }
     strcpy(nuevo->nombre, nombre);
     nuevo->linea = linea;
     nuevo->valor = 0;

@@ -24,6 +24,7 @@ static int abrirEntrada(int argc, char **argv) {
 
 static int abortar(void) {
   fprintf(stderr, "Compilacion abortada por errores.\n");
+  liberarTabla();
   return 1;
 }
 
@@ -60,6 +61,8 @@ int main(int argc, char **argv) {
   }
 
   imprimirCodigo();
+
+  liberarTabla();
 
   return 0;
 }
