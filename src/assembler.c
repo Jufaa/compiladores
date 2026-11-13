@@ -433,22 +433,22 @@ static void asmEmit(FILE *out, AsmProgram *p) {
 int generarAssembly(Nodo *root, const char *archivo) {
   AsmProgram *program = calloc(1, sizeof(*program));
   if (program == NULL) return asmError("no se pudo reservar memoria");
-  if (!asmPlan(program, root)) { free(program); return 0; }
-  size_t size = strlen(archivo) + sizeof(".tmp.XXXXXX");
-  char *temporary = malloc(size);
-  if (temporary == NULL) { free(program); return asmError("no se pudo reservar memoria"); }
-  snprintf(temporary, size, "%s.tmp.XXXXXX", archivo);
-  int fd = mkstemp(temporary);
-  FILE *out = fd < 0 ? NULL : fdopen(fd, "w");
-  int ok = out != NULL;
-  if (ok) {
-    asmEmit(out, program);
-    ok = !ferror(out);
-    if (fclose(out) != 0) ok = 0;
-    if (ok && rename(temporary, archivo) != 0) ok = 0;
-  } else if (fd >= 0) close(fd);
-  if (!ok) { unlink(temporary); asmError("no se pudo escribir el archivo de salida"); }
-  free(temporary);
+  if (!asmPlan(program, root)) {
+    free(program);
+    return 0;
+  }
+  FILE *out = fopen(archivo, "w");
+  if (out == NULL) {
+    free(program);
+    return asmError("no se pudo abrir el archivo de salida");
+  }
+  asmEmit(out, program);
+  int ok = !ferror(out);
+  if (fclose(out) != 0) ok = 0;
+  if (!ok) {
+    remove(archivo);
+    asmError("no se pudo escribir el archivo de salida");
+  }
   free(program);
   return ok;
 }
