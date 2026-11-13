@@ -58,7 +58,7 @@ static int asmRegister(AsmFunction *f, int r) {
 static int asmDefine(AsmFunction *f, int r, enum TipoDato type) {
   if (r < 0 || r >= ASM_LIMIT || (type != T_INT && type != T_BOOL) ||
       f->types[r] != T_ERROR) return 0;
-  f->bytes += 4;
+  f->bytes += 8;
   f->slots[r] = f->bytes;
   f->types[r] = type;
   return 1;
@@ -163,7 +163,7 @@ static int asmPlan(AsmProgram *p, Nodo *root) {
             type != signature->tipoParametros[received++])
           return asmError("firma y parametros de entrada no coinciden");
       }
-      f->bytes += 4;
+      f->bytes += 8;
       f->vars[f->count] = (AsmVariable){in.nombre, type, f->bytes, depth, 1};
       f->bindings[i] = ++f->count;
       break;
@@ -264,12 +264,11 @@ static void asmMemory(char *buffer, size_t size, AsmProgram *p, AsmFunction *f, 
 }
 
 static void asmEmit(FILE *out, AsmProgram *p) {
-  const char *gpr[] = {"%edi", "%esi", "%edx", "%ecx", "%r8d", "%r9d"};
-  const char *gprByte[] = {"%dil", "%sil", "%dl", "%cl", "%r8b", "%r9b"};
+  const char *gpr[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
   fprintf(out, "# Linux x86-64 System V, GNU assembler AT&T syntax\n.bss\n");
   for (int i = 0; i < p->globalCount; i++) {
     const char *name = p->globals[i].name;
-    fprintf(out, ".balign 4\n.globl %s\n.type %s, @object\n%s:\n.zero 4\n.size %s, 4\n",
+    fprintf(out, ".balign 8\n.globl %s\n.type %s, @object\n%s:\n.zero 8\n.size %s, 8\n",
             name, name, name, name);
   }
   fprintf(out, ".text\n");
@@ -277,43 +276,59 @@ static void asmEmit(FILE *out, AsmProgram *p) {
     AsmFunction *f = &p->functions[n];
     const char *name = f->method->nombre;
     int pending[ASM_LIMIT], pendingCount = 0;
-    fprintf(out, ".globl %s\n.type %s, @function\n%s:\n"
-            "\tpushq %%rbp\n\tmovq %%rsp, %%rbp\n\tsubq $%d, %%rsp\n",
+
+    // Prólogo con enter como indica la guía
+    fprintf(out, ".globl %s\n.type %s, @function\n%s:\n\tenter $%d, $0\n",
             name, name, name, f->bytes);
+
     for (int i = f->begin + 1; i < f->end; i++) {
       Instruccion in = instrucciones[i];
       char memory[160];
       int a = asmRegister(f, in.arg1) ? f->slots[in.arg1] : 0;
       int b = asmRegister(f, in.arg2) ? f->slots[in.arg2] : 0;
       int r = asmRegister(f, in.res) ? f->slots[in.res] : 0;
+
       switch (in.op) {
-      case INS_ENTRAR_AMBITO: case INS_SALIR_AMBITO: break;
+      case INS_ENTRAR_AMBITO:
+      case INS_SALIR_AMBITO:
+        break;
+
       case INS_DECLARAR_VAR:
         asmMemory(memory, sizeof(memory), p, f, f->bindings[i]);
-        fprintf(out, "\tmovl $0, %s\n", memory);
+        fprintf(out, "\tmovq $0, %s\n", memory);
         break;
+
       case INS_RECIBIR_PARAM: {
         int location = in.res;
         asmMemory(memory, sizeof(memory), p, f, f->bindings[i]);
         if (location >= 6) {
-          fprintf(out, "\t%s %d(%%rbp), %%eax\n\tmovl %%eax, %s\n",
-                  in.arg1 == T_BOOL ? "movzbl" : "movl", 16 + 8 * (location - 6), memory);
-        } else if (in.arg1 == T_BOOL)
-          fprintf(out, "\tmovzbl %s, %%eax\n\tmovl %%eax, %s\n", gprByte[location], memory);
-        else fprintf(out, "\tmovl %s, %s\n", gpr[location], memory);
+          fprintf(out, "\tmovq %d(%%rbp), %%r10\n\tmovq %%r10, %s\n",
+                  16 + 8 * (location - 6), memory);
+        } else {
+          fprintf(out, "\tmovq %s, %s\n", gpr[location], memory);
+        }
         break;
       }
-      case INS_LOAD_INT: case INS_LOAD_BOOL:
-        fprintf(out, "\tmovl $%d, -%d(%%rbp)\n", in.arg1, r); break;
+
+      case INS_LOAD_INT:
+      case INS_LOAD_BOOL:
+        fprintf(out, "\tmovq $%d, -%d(%%rbp)\n", in.arg1, r);
+        break;
+
       case INS_LOAD_MEM:
         asmMemory(memory, sizeof(memory), p, f, f->bindings[i]);
-        fprintf(out, "\tmovl %s, %%eax\n\tmovl %%eax, -%d(%%rbp)\n", memory, r);
+        fprintf(out, "\tmovq %s, %%r10\n\tmovq %%r10, -%d(%%rbp)\n", memory, r);
         break;
+
       case INS_STORE_MEM:
         asmMemory(memory, sizeof(memory), p, f, f->bindings[i]);
-        fprintf(out, "\tmovl -%d(%%rbp), %%eax\n\tmovl %%eax, %s\n", a, memory);
+        fprintf(out, "\tmovq -%d(%%rbp), %%r10\n\tmovq %%r10, %s\n", a, memory);
         break;
-      case INS_PARAM: pending[pendingCount++] = in.arg1; break;
+
+      case INS_PARAM:
+        pending[pendingCount++] = in.arg1;
+        break;
+
       case INS_CALL: {
         int overflow = pendingCount > 6 ? pendingCount - 6 : 0;
         int area = (overflow * 8 + 15) & ~15;
@@ -321,61 +336,91 @@ static void asmEmit(FILE *out, AsmProgram *p) {
         for (int j = 0; j < pendingCount; j++) {
           int slot = f->slots[pending[j]];
           if (j >= 6)
-            fprintf(out, "\tmovl -%d(%%rbp), %%eax\n\tmovl %%eax, %d(%%rsp)\n",
+            fprintf(out, "\tmovq -%d(%%rbp), %%r10\n\tmovq %%r10, %d(%%rsp)\n",
                     slot, (j - 6) * 8);
-          else fprintf(out, "\tmovl -%d(%%rbp), %s\n", slot, gpr[j]);
+          else
+            fprintf(out, "\tmovq -%d(%%rbp), %s\n", slot, gpr[j]);
         }
+        if (strcmp(in.nombre, "printInt") == 0)
+          fprintf(out, "\tmovq $0, %%rax\n");
         fprintf(out, "\tcall %s\n", in.nombre);
         if (area) fprintf(out, "\taddq $%d, %%rsp\n", area);
         if (in.res >= 0)
-          fprintf(out, "\tmovl %%eax, -%d(%%rbp)\n", r);
+          fprintf(out, "\tmovq %%rax, -%d(%%rbp)\n", r);
         pendingCount = 0;
         break;
       }
+
       case INS_RETURN:
         if (in.arg1 >= 0)
-          fprintf(out, "\tmovl -%d(%%rbp), %%eax\n", a);
-        else fprintf(out, "\txorl %%eax, %%eax\n");
+          fprintf(out, "\tmovq -%d(%%rbp), %%rax\n", a);
+        else
+          fprintf(out, "\tmovq $0, %%rax\n");
         fprintf(out, "\tjmp .Lcg_return_%d\n", n);
         break;
-      case LABEL: fprintf(out, ".Lcg_label_%d:\n", in.res); break;
-      case JMP: fprintf(out, "\tjmp .Lcg_label_%d\n", in.res); break;
-      case JMPTrue: case JMPFalse:
-        fprintf(out, "\tcmpl $0, -%d(%%rbp)\n\t%s .Lcg_label_%d\n",
-                r, in.op == JMPTrue ? "jne" : "je", in.arg1);
+
+      case LABEL:
+        fprintf(out, ".Lcg_label_%d:\n", in.res);
         break;
+
+      case JMP:
+        fprintf(out, "\tjmp .Lcg_label_%d\n", in.res);
+        break;
+
+      case JMPTrue:
+      case JMPFalse:
+        fprintf(out, "\tmovq -%d(%%rbp), %%r10\n\tmovq $1, %%r11\n\tcmpq %%r11, %%r10\n\t%s .Lcg_label_%d\n",
+                r, in.op == JMPTrue ? "je" : "jne", in.arg1);
+        break;
+
       default: {
-        fprintf(out, "\tmovl -%d(%%rbp), %%eax\n", a);
+        fprintf(out, "\tmovq -%d(%%rbp), %%r10\n", a);
         const char *cc = NULL;
         switch (in.op) {
-        case INS_SUMA_REG: fprintf(out, "\taddl -%d(%%rbp), %%eax\n", b); break;
-        case INS_RESTA_REG: fprintf(out, "\tsubl -%d(%%rbp), %%eax\n", b); break;
-        case INS_MUL_REG: fprintf(out, "\timull -%d(%%rbp), %%eax\n", b); break;
-        case INS_DIV_REG: case INS_MOD_REG:
-          fprintf(out, "\tcltd\n\tidivl -%d(%%rbp)\n", b);
-          if (in.op == INS_MOD_REG) fprintf(out, "\tmovl %%edx, %%eax\n");
+        case INS_SUMA_REG:
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\taddq %%r11, %%r10\n", b);
           break;
-        case INS_NEG_REG: fprintf(out, "\tnegl %%eax\n"); break;
-        case INS_NOT_REG: case INS_NOTReg:
-          fprintf(out, "\ttestl %%eax, %%eax\n\tsete %%al\n\tmovzbl %%al, %%eax\n"); break;
-        case INS_AND_REG: case INS_OR_REG:
-          fprintf(out, "\ttestl %%eax, %%eax\n\tsetne %%al\n"
-                  "\tcmpl $0, -%d(%%rbp)\n\tsetne %%cl\n\t%s %%cl, %%al\n"
-                  "\tmovzbl %%al, %%eax\n", b, in.op == INS_AND_REG ? "andb" : "orb");
+        case INS_RESTA_REG:
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\tsubq %%r11, %%r10\n", b);
           break;
-        case INS_COMP_REG: cc = "e"; break;
-        case INS_NOIGUAL_REG: cc = "ne"; break;
-        case INS_MENOR_REG: cc = "l"; break;
-        case INS_MAYOR_REG: cc = "g"; break;
+        case INS_MUL_REG:
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\timulq %%r11, %%r10\n", b);
+          break;
+        case INS_DIV_REG:
+        case INS_MOD_REG:
+          // idivq divide %rdx:%rax por el divisor; cociente en %rax, resto en %rdx
+          fprintf(out, "\tmovq %%r10, %%rax\n\tcqto\n\tidivq -%d(%%rbp)\n", b);
+          fprintf(out, "\tmovq %s, %%r10\n", in.op == INS_MOD_REG ? "%rdx" : "%rax");
+          break;
+        case INS_NEG_REG:
+          fprintf(out, "\tnegq %%r10\n");
+          break;
+        case INS_NOT_REG:
+        case INS_NOTReg:
+          fprintf(out, "\tmovq $0, %%r11\n\tcmpq %%r11, %%r10\n"
+                       "\tmovq $0, %%r11\n\tmovq $1, %%r10\n\tcmove %%r10, %%r11\n"
+                       "\tmovq %%r11, %%r10\n");
+          break;
+        case INS_AND_REG:
+        case INS_OR_REG:
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\t%s %%r11, %%r10\n",
+                  b, in.op == INS_AND_REG ? "andq" : "orq");
+          break;
+        case INS_COMP_REG:       cc = "e";  break;
+        case INS_NOIGUAL_REG:    cc = "ne"; break;
+        case INS_MENOR_REG:      cc = "l";  break;
+        case INS_MAYOR_REG:      cc = "g";  break;
         case INS_MENORIGUAL_REG: cc = "le"; break;
         case INS_MAYORIGUAL_REG: cc = "ge"; break;
-        default: break; /* The planning pass rejects unsupported opcodes. */
+        default: break;
         }
         if (cc != NULL) {
-          fprintf(out, "\tcmpl -%d(%%rbp), %%eax\n\tset%s %%al\n", b, cc);
-          fprintf(out, "\tmovzbl %%al, %%eax\n");
+          // Esquema exacto de la guía con %r10, %r11 y cmov*
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\tcmpq %%r11, %%r10\n"
+                       "\tmovq $0, %%r11\n\tmovq $1, %%r10\n"
+                       "\tcmov%s %%r10, %%r11\n\tmovq %%r11, %%r10\n", b, cc);
         }
-        fprintf(out, "\tmovl %%eax, -%d(%%rbp)\n", r);
+        fprintf(out, "\tmovq %%r10, -%d(%%rbp)\n", r);
         break;
       }
       }
