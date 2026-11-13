@@ -11,7 +11,7 @@ BUILD = build
 BIN   = compilador
 
 # Modulos propios: uno por cada .c de src/
-MODULOS = ast tablaSimbolos semantico interprete codigoIntermedio main
+MODULOS = ast tablaSimbolos semantico interprete codigoIntermedio assembler main
 
 # Objetos: los modulos propios mas los dos generados
 OBJETOS = $(MODULOS:%=$(BUILD)/%.o) $(BUILD)/bison.tab.o $(BUILD)/flex.o
