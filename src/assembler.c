@@ -4,326 +4,231 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
-/* Stack-slot backend for Linux x86-64 System V; the TAC remains unchanged. */
 #define ASM_LIMIT 100
 
 typedef struct {
-  const char *name;
-  enum TipoDato type;
-  int offset, depth, active;
+  const char *nombre;
+  int offset, bloque, activo;
 } AsmVariable;
 
 typedef struct {
-  Nodo *method;
-  int begin, end, bytes, count;
-  AsmVariable vars[ASM_LIMIT];
-  int bindings[ASM_LIMIT], slots[ASM_LIMIT];
-  enum TipoDato types[ASM_LIMIT];
-} AsmFunction;
+  Nodo *nodoFuncion;
+  int inicioDelaFuncion, finDeLaFuncion, bytes, count;
+  AsmVariable variables[ASM_LIMIT];
+  int variableALeer[ASM_LIMIT];
+  int numRBP[ASM_LIMIT];
+} AsmFuncion;
 
 typedef struct {
-  AsmFunction functions[ASM_LIMIT];
-  AsmVariable globals[ASM_LIMIT];
+  AsmFuncion funciones[ASM_LIMIT];
+  AsmVariable variablesGlobales[ASM_LIMIT];
   int count, globalCount;
 } AsmProgram;
 
-static int asmError(const char *message) {
-  fprintf(stderr, "Error assembly: %s\n", message);
+static int asmError(const char *mensaje) {
+  fprintf(stderr, "Error assembly: %s\n", mensaje);
   return 0;
 }
 
-static void asmMethods(AsmProgram *p, Nodo *node) {
-  if (node == NULL) return;
-  if (node->tipoNodo == N_METODO) {
-    if (p->count < ASM_LIMIT) p->functions[p->count++].method = node;
-  } else if (node->tipoNodo == N_SEQ) {
-    asmMethods(p, node->izq);
-    asmMethods(p, node->der);
+static void asmMetodos(AsmProgram *programa, Nodo *nodo) {
+  if (nodo == NULL) return;
+  if (nodo->tipoNodo == N_METODO) {
+    programa->funciones[programa->count].nodoFuncion = nodo;
+    programa->count++;
+  } else if (nodo->tipoNodo == N_SEQ) {
+    asmMetodos(programa, nodo->izq);
+    asmMetodos(programa, nodo->der);
   }
 }
 
-static AsmFunction *asmFunction(AsmProgram *p, const char *name) {
-  for (int i = 0; i < p->count; i++)
-    if (strcmp(p->functions[i].method->nombre, name) == 0)
-      return &p->functions[i];
+static AsmFuncion *asmBuscarFuncion(AsmProgram *programa, const char *nombre) {
+  for (int i = 0; i < programa->count; i++)
+    if (strcmp(programa->funciones[i].nodoFuncion->nombre, nombre) == 0)
+      return &programa->funciones[i];
   return NULL;
 }
 
-static int asmRegister(AsmFunction *f, int r) {
-  return r >= 0 && r < ASM_LIMIT && f->types[r] != T_ERROR;
+static void asmNuevoRegistro(AsmFuncion *funcion, int tTemporal) {
+  funcion->bytes += 8;
+  funcion->numRBP[tTemporal] = funcion->bytes;
 }
 
-static int asmDefine(AsmFunction *f, int r, enum TipoDato type) {
-  if (r < 0 || r >= ASM_LIMIT || (type != T_INT && type != T_BOOL) ||
-      f->types[r] != T_ERROR) return 0;
-  f->bytes += 8;
-  f->slots[r] = f->bytes;
-  f->types[r] = type;
-  return 1;
-}
-
-static int asmBinding(AsmProgram *p, AsmFunction *f, const char *name) {
-  for (int j = f->count - 1; j >= 0; j--)
-    if (f->vars[j].active && strcmp(f->vars[j].name, name) == 0) return j + 1;
-  for (int j = 0; j < p->globalCount; j++)
-    if (strcmp(p->globals[j].name, name) == 0) return -j - 1;
+static int asmBuscarVariable(AsmProgram *programa, AsmFuncion *funcion,
+                             const char *nombre) {
+  for (int j = funcion->count - 1; j >= 0; j--)
+    if (funcion->variables[j].activo &&
+        strcmp(funcion->variables[j].nombre, nombre) == 0)
+      return j + 1;
+  for (int j = 0; j < programa->globalCount; j++)
+    if (strcmp(programa->variablesGlobales[j].nombre, nombre) == 0)
+      return -j - 1;
   return 0;
 }
 
-static enum TipoDato asmVariableType(AsmProgram *p, AsmFunction *f, int binding) {
-  return binding > 0 ? f->vars[binding - 1].type : p->globals[-binding - 1].type;
-}
-
-static int asmTarget(AsmFunction *f, int label) {
-  for (int i = f->begin + 1; i < f->end; i++)
-    if (instrucciones[i].op == LABEL && instrucciones[i].res == label) return i;
-  return -1;
-}
-
-/* Reject reachable fall-through; returns jump directly to a shared epilogue. */
-static int asmControlFlow(AsmFunction *f) {
-  int visited[ASM_LIMIT] = {0}, queue[ASM_LIMIT], head = 0, tail = 0;
-  queue[tail++] = f->begin + 1;
-  visited[f->begin + 1] = 1;
-  while (head < tail) {
-    int i = queue[head++];
-    if (i == f->end) {
-      if (f->method->tipoDato != T_VOID)
-        return asmError("funcion no void puede terminar sin devolver un valor");
-      continue;
-    }
-    Instruccion in = instrucciones[i];
-    if (in.op == INS_RETURN) continue;
-    int next[2] = {i + 1, -1};
-    if (in.op == JMP) next[0] = asmTarget(f, in.res);
-    if (in.op == JMPTrue || in.op == JMPFalse) next[1] = asmTarget(f, in.arg1);
-    for (int k = 0; k < 2; k++) {
-      int target = next[k];
-      if (target < 0) continue;
-      if (!visited[target]) {
-        visited[target] = 1;
-        queue[tail++] = target;
-      }
-    }
-  }
-  return 1;
-}
-
-static int asmPlan(AsmProgram *p, Nodo *root) {
-  asmMethods(p, root);
-  for (int i = 0; i < p->count; i++) {
-    Simbolo *signature = p->functions[i].method->simbolo;
-    if (signature->tipoDato == T_FLOAT)
+static int asmPlan(AsmProgram *programa, Nodo *raiz) {
+  asmMetodos(programa, raiz);
+  for (int i = 0; i < programa->count; i++) {
+    Simbolo *simbolo = programa->funciones[i].nodoFuncion->simbolo;
+    if (simbolo->tipoDato == T_FLOAT)
       return asmError("el backend no soporta flotantes");
-    for (int j = 0; j < signature->cantidadParametros; j++)
-      if (signature->tipoParametros[j] == T_FLOAT)
+    for (int j = 0; j < simbolo->cantidadParametros; j++)
+      if (simbolo->tipoParametros[j] == T_FLOAT)
         return asmError("el backend no soporta flotantes");
   }
-  AsmFunction *f = NULL;
-  int depth = 0, pending[ASM_LIMIT], pendingCount = 0, received = 0;
+
+  AsmFuncion *funcion = NULL;
+  int bloque = 0;
   for (int i = 0; i < CANTInstrucciones; i++) {
     Instruccion in = instrucciones[i];
     if (in.op == ARRANCO_F) {
-      f = asmFunction(p, in.nombre);
-      if (f == NULL) return asmError("funcion sin firma");
-      f->begin = i;
-      depth = pendingCount = received = 0;
-      for (int j = 0; j < ASM_LIMIT; j++) f->types[j] = T_ERROR;
+      funcion = asmBuscarFuncion(programa, in.nombre);
+      funcion->inicioDelaFuncion = i;
+      bloque = 0;
       continue;
     }
-    if (f == NULL) {
-      if (in.op != INS_DECLARAR_VAR || p->globalCount == ASM_LIMIT)
-        return asmError("instruccion fuera de una funcion");
+    if (funcion == NULL) {
       if (in.res == T_FLOAT)
         return asmError("el backend no soporta flotantes");
-      p->globals[p->globalCount++] = (AsmVariable){in.nombre, in.res, 0, 0, 1};
+      programa->variablesGlobales[programa->globalCount++] =
+          (AsmVariable){in.nombre, 0, 0, 1};
       continue;
     }
-    if (pendingCount && in.op != INS_PARAM && in.op != INS_CALL)
-      return asmError("secuencia de parametros incompleta");
+
     switch (in.op) {
-    case INS_ENTRAR_AMBITO: depth++; break;
+    case INS_ENTRAR_AMBITO:
+      bloque++;
+      break;
     case INS_SALIR_AMBITO:
-      if (depth <= 0) return asmError("cierre de ambito invalido");
-      for (int j = 0; j < f->count; j++)
-        if (f->vars[j].depth == depth) f->vars[j].active = 0;
-      depth--;
+      for (int j = 0; j < funcion->count; j++)
+        if (funcion->variables[j].bloque == bloque)
+          funcion->variables[j].activo = 0;
+      bloque--;
       break;
     case INS_RECIBIR_PARAM:
-    case INS_DECLARAR_VAR: {
-      enum TipoDato type = in.op == INS_RECIBIR_PARAM ? in.arg1 : in.res;
-      if (type == T_FLOAT)
+    case INS_DECLARAR_VAR:
+      if ((in.op == INS_RECIBIR_PARAM ? in.arg1 : in.res) == T_FLOAT)
         return asmError("el backend no soporta flotantes");
-      if (f->count == ASM_LIMIT) return asmError("demasiadas variables");
-      if (in.op == INS_RECIBIR_PARAM) {
-        Simbolo *signature = f->method->simbolo;
-        if (in.res != received || received >= signature->cantidadParametros ||
-            type != signature->tipoParametros[received++])
-          return asmError("firma y parametros de entrada no coinciden");
-      }
-      f->bytes += 8;
-      f->vars[f->count] = (AsmVariable){in.nombre, type, f->bytes, depth, 1};
-      f->bindings[i] = ++f->count;
+      funcion->bytes += 8;
+      funcion->variables[funcion->count] =
+          (AsmVariable){in.nombre, funcion->bytes, bloque, 1};
+      funcion->variableALeer[i] = ++funcion->count;
       break;
-    }
     case INS_LOAD_MEM:
-    case INS_STORE_MEM: {
-      int binding = asmBinding(p, f, in.nombre);
-      if (binding == 0) return asmError("variable fuera de ambito");
-      f->bindings[i] = binding;
-      enum TipoDato type = asmVariableType(p, f, binding);
-      if (in.op == INS_LOAD_MEM) {
-        if (!asmDefine(f, in.res, type)) return asmError("temporal de carga invalido");
-      } else if (!asmRegister(f, in.arg1) || f->types[in.arg1] != type)
-        return asmError("almacenamiento sin valor compatible");
+      funcion->variableALeer[i] = asmBuscarVariable(programa, funcion, in.nombre);
+      asmNuevoRegistro(funcion, in.res);
       break;
-    }
-    case INS_LOAD_INT:
-    case INS_LOAD_BOOL:
-      if (!asmDefine(f, in.res, in.op == INS_LOAD_BOOL ? T_BOOL : T_INT))
-        return asmError("temporal literal invalido");
+    case INS_STORE_MEM:
+      funcion->variableALeer[i] = asmBuscarVariable(programa, funcion, in.nombre);
+      break;
+    case INS_CALL:
+      if (in.res >= 0) asmNuevoRegistro(funcion, in.res);
+      break;
+    case TERMINO_F:
+      funcion->finDeLaFuncion = i;
+      funcion->bytes = (funcion->bytes + 15) & ~15;
+      funcion = NULL;
       break;
     case INS_LOAD_FLOAT:
       return asmError("el backend no soporta flotantes");
     case INS_PARAM:
-      if (in.res != pendingCount || pendingCount == ASM_LIMIT ||
-          !asmRegister(f, in.arg1)) return asmError("parametro sin valor");
-      pending[pendingCount++] = in.arg1;
-      break;
-    case INS_CALL: {
-      AsmFunction *callee = asmFunction(p, in.nombre);
-      if (callee == NULL || in.arg1 != pendingCount ||
-          pendingCount != callee->method->simbolo->cantidadParametros)
-        return asmError("llamada sin firma compatible");
-      for (int j = 0; j < pendingCount; j++)
-        if (f->types[pending[j]] != callee->method->simbolo->tipoParametros[j])
-          return asmError("tipo de argumento incompatible");
-      if (callee->method->tipoDato != T_VOID) {
-        if (!asmDefine(f, in.res, callee->method->tipoDato))
-          return asmError("resultado de llamada invalido");
-      } else if (in.res != -1) return asmError("llamada void con resultado");
-      pendingCount = 0;
-      break;
-    }
     case INS_RETURN:
-      if ((f->method->tipoDato == T_VOID && in.arg1 != -1) ||
-          (f->method->tipoDato != T_VOID &&
-           (!asmRegister(f, in.arg1) || f->types[in.arg1] != f->method->tipoDato)))
-        return asmError("retorno sin valor compatible");
-      break;
     case LABEL:
+    case JMP:
+    case JMPTrue:
+    case JMPFalse:
       break;
-    case JMP: case JMPTrue: case JMPFalse:
-      if (in.op != JMP && (!asmRegister(f, in.res) || f->types[in.res] != T_BOOL))
-        return asmError("salto sin condicion booleana");
+    default:
+      asmNuevoRegistro(funcion, in.res);
       break;
-    case TERMINO_F:
-      f->end = i;
-      if (depth || pendingCount || received != f->method->simbolo->cantidadParametros)
-        return asmError("funcion o ambitos incompletos");
-      for (int j = f->begin + 1; j < f->end; j++) {
-        Instruccion branch = instrucciones[j];
-        int label = branch.op == JMP ? branch.res : branch.arg1;
-        if ((branch.op == JMP || branch.op == JMPTrue || branch.op == JMPFalse) &&
-            asmTarget(f, label) < 0) return asmError("destino de salto inexistente");
-      }
-      if (!asmControlFlow(f)) return 0;
-      f->bytes = (f->bytes + 15) & ~15;
-      f = NULL;
-      break;
-    default: {
-      int unary = in.op == INS_NEG_REG || in.op == INS_NOT_REG || in.op == INS_NOTReg;
-      int arithmetic = in.op == INS_SUMA_REG || in.op == INS_RESTA_REG ||
-                       in.op == INS_MUL_REG || in.op == INS_DIV_REG || in.op == INS_MOD_REG;
-      int logical = in.op == INS_AND_REG || in.op == INS_OR_REG;
-      int comparison = in.op == INS_COMP_REG || in.op == INS_NOIGUAL_REG ||
-                       in.op == INS_MENOR_REG || in.op == INS_MAYOR_REG ||
-                       in.op == INS_MENORIGUAL_REG || in.op == INS_MAYORIGUAL_REG;
-      if ((!unary && !arithmetic && !logical && !comparison) ||
-          !asmRegister(f, in.arg1) || (!unary && !asmRegister(f, in.arg2)))
-        return asmError("operacion con temporal inexistente");
-      enum TipoDato type = f->types[in.arg1];
-      if ((!unary && type != f->types[in.arg2]) ||
-          ((arithmetic || in.op == INS_NEG_REG) && type != T_INT) ||
-          ((logical || (unary && in.op != INS_NEG_REG)) && type != T_BOOL))
-        return asmError("operandos incompatibles");
-      if (!asmDefine(f, in.res, arithmetic || in.op == INS_NEG_REG ? T_INT : T_BOOL))
-        return asmError("temporal de resultado invalido");
-      break;
-    }
     }
   }
-  return f == NULL ? 1 : asmError("funcion sin cierre");
-}
-
-static void asmMemory(char *buffer, size_t size, AsmProgram *p, AsmFunction *f, int binding) {
-  if (binding > 0) snprintf(buffer, size, "-%d(%%rbp)", f->vars[binding - 1].offset);
-  else snprintf(buffer, size, "%s(%%rip)", p->globals[-binding - 1].name);
+  return 1;
 }
 
 static void asmEmit(FILE *out, AsmProgram *p) {
   const char *gpr[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
-  fprintf(out, "# Linux x86-64 System V, GNU assembler AT&T syntax\n.bss\n");
+  fprintf(out, ".bss\n");
   for (int i = 0; i < p->globalCount; i++) {
-    const char *name = p->globals[i].name;
-    fprintf(out, ".balign 8\n.globl %s\n.type %s, @object\n%s:\n.zero 8\n.size %s, 8\n",
-            name, name, name, name);
+    const char *name = p->variablesGlobales[i].nombre;
+    fprintf(out, ".balign 8\n");
+    fprintf(out, ".globl %s\n", name);
+    fprintf(out, "%s:\n", name);
+    fprintf(out, ".zero 8\n");
   }
   fprintf(out, ".text\n");
   for (int n = 0; n < p->count; n++) {
-    AsmFunction *f = &p->functions[n];
-    const char *name = f->method->nombre;
+    AsmFuncion *f = &p->funciones[n];
+    const char *name = f->nodoFuncion->nombre;
     int pending[ASM_LIMIT], pendingCount = 0;
 
-    // Prólogo con enter como indica la guía
-    fprintf(out, ".globl %s\n.type %s, @function\n%s:\n\tenter $%d, $0\n",
-            name, name, name, f->bytes);
+    fprintf(out, ".globl %s\n", name);
+    fprintf(out, "%s:\n", name);
+    fprintf(out, "\tenter $%d, $0\n", f->bytes);
 
-    for (int i = f->begin + 1; i < f->end; i++) {
+    for (int i = f->inicioDelaFuncion + 1; i < f->finDeLaFuncion; i++) {
       Instruccion in = instrucciones[i];
-      char memory[160];
-      int a = asmRegister(f, in.arg1) ? f->slots[in.arg1] : 0;
-      int b = asmRegister(f, in.arg2) ? f->slots[in.arg2] : 0;
-      int r = asmRegister(f, in.res) ? f->slots[in.res] : 0;
 
       switch (in.op) {
       case INS_ENTRAR_AMBITO:
       case INS_SALIR_AMBITO:
         break;
 
-      case INS_DECLARAR_VAR:
-        asmMemory(memory, sizeof(memory), p, f, f->bindings[i]);
-        fprintf(out, "\tmovq $0, %s\n", memory);
+      case INS_DECLARAR_VAR: {
+        int variable = f->variableALeer[i];
+        if (variable > 0) {
+          int offset = f->variables[variable - 1].offset;
+          fprintf(out, "\tmovq $0, -%d(%%rbp)\n", offset);
+        } else {
+          const char *nombre = p->variablesGlobales[-variable - 1].nombre;
+          fprintf(out, "\tmovq $0, %s(%%rip)\n", nombre);
+        }
         break;
+      }
 
       case INS_RECIBIR_PARAM: {
         int location = in.res;
-        asmMemory(memory, sizeof(memory), p, f, f->bindings[i]);
+        int variable = f->variableALeer[i];
+        int offset = f->variables[variable - 1].offset;
         if (location >= 6) {
-          fprintf(out, "\tmovq %d(%%rbp), %%r10\n\tmovq %%r10, %s\n",
-                  16 + 8 * (location - 6), memory);
+          fprintf(out, "\tmovq %d(%%rbp), %%r10\n", 16 + 8 * (location - 6));
+          fprintf(out, "\tmovq %%r10, -%d(%%rbp)\n", offset);
         } else {
-          fprintf(out, "\tmovq %s, %s\n", gpr[location], memory);
+          fprintf(out, "\tmovq %s, -%d(%%rbp)\n", gpr[location], offset);
         }
         break;
       }
 
       case INS_LOAD_INT:
       case INS_LOAD_BOOL:
-        fprintf(out, "\tmovq $%d, -%d(%%rbp)\n", in.arg1, r);
+        fprintf(out, "\tmovq $%d, -%d(%%rbp)\n", in.arg1, f->numRBP[in.res]);
         break;
 
-      case INS_LOAD_MEM:
-        asmMemory(memory, sizeof(memory), p, f, f->bindings[i]);
-        fprintf(out, "\tmovq %s, %%r10\n\tmovq %%r10, -%d(%%rbp)\n", memory, r);
+      case INS_LOAD_MEM: {
+        int variable = f->variableALeer[i];
+        if (variable > 0) {
+          int offset = f->variables[variable - 1].offset;
+          fprintf(out, "\tmovq -%d(%%rbp), %%r10\n", offset);
+        } else {
+          const char *nombre = p->variablesGlobales[-variable - 1].nombre;
+          fprintf(out, "\tmovq %s(%%rip), %%r10\n", nombre);
+        }
+        fprintf(out, "\tmovq %%r10, -%d(%%rbp)\n", f->numRBP[in.res]);
         break;
+      }
 
-      case INS_STORE_MEM:
-        asmMemory(memory, sizeof(memory), p, f, f->bindings[i]);
-        fprintf(out, "\tmovq -%d(%%rbp), %%r10\n\tmovq %%r10, %s\n", a, memory);
+      case INS_STORE_MEM: {
+        int variable = f->variableALeer[i];
+        fprintf(out, "\tmovq -%d(%%rbp), %%r10\n", f->numRBP[in.arg1]);
+        if (variable > 0) {
+          int offset = f->variables[variable - 1].offset;
+          fprintf(out, "\tmovq %%r10, -%d(%%rbp)\n", offset);
+        } else {
+          const char *nombre = p->variablesGlobales[-variable - 1].nombre;
+          fprintf(out, "\tmovq %%r10, %s(%%rip)\n", nombre);
+        }
         break;
+      }
 
       case INS_PARAM:
         pending[pendingCount++] = in.arg1;
@@ -334,26 +239,27 @@ static void asmEmit(FILE *out, AsmProgram *p) {
         int area = (overflow * 8 + 15) & ~15;
         if (area) fprintf(out, "\tsubq $%d, %%rsp\n", area);
         for (int j = 0; j < pendingCount; j++) {
-          int slot = f->slots[pending[j]];
-          if (j >= 6)
-            fprintf(out, "\tmovq -%d(%%rbp), %%r10\n\tmovq %%r10, %d(%%rsp)\n",
-                    slot, (j - 6) * 8);
-          else
+          int slot = f->numRBP[pending[j]];
+          if (j >= 6) {
+            fprintf(out, "\tmovq -%d(%%rbp), %%r10\n", slot);
+            fprintf(out, "\tmovq %%r10, %d(%%rsp)\n", (j - 6) * 8);
+          } else {
             fprintf(out, "\tmovq -%d(%%rbp), %s\n", slot, gpr[j]);
+          }
         }
         if (strcmp(in.nombre, "printInt") == 0)
           fprintf(out, "\tmovq $0, %%rax\n");
         fprintf(out, "\tcall %s\n", in.nombre);
         if (area) fprintf(out, "\taddq $%d, %%rsp\n", area);
         if (in.res >= 0)
-          fprintf(out, "\tmovq %%rax, -%d(%%rbp)\n", r);
+          fprintf(out, "\tmovq %%rax, -%d(%%rbp)\n", f->numRBP[in.res]);
         pendingCount = 0;
         break;
       }
 
       case INS_RETURN:
         if (in.arg1 >= 0)
-          fprintf(out, "\tmovq -%d(%%rbp), %%rax\n", a);
+          fprintf(out, "\tmovq -%d(%%rbp), %%rax\n", f->numRBP[in.arg1]);
         else
           fprintf(out, "\tmovq $0, %%rax\n");
         fprintf(out, "\tjmp .Lcg_return_%d\n", n);
@@ -369,27 +275,36 @@ static void asmEmit(FILE *out, AsmProgram *p) {
 
       case JMPTrue:
       case JMPFalse:
-        fprintf(out, "\tmovq -%d(%%rbp), %%r10\n\tmovq $1, %%r11\n\tcmpq %%r11, %%r10\n\t%s .Lcg_label_%d\n",
-                r, in.op == JMPTrue ? "je" : "jne", in.arg1);
+        fprintf(out, "\tmovq -%d(%%rbp), %%r10\n", f->numRBP[in.res]);
+        fprintf(out, "\tmovq $1, %%r11\n");
+        fprintf(out, "\tcmpq %%r11, %%r10\n");
+        fprintf(out, "\t%s .Lcg_label_%d\n", in.op == JMPTrue ? "je" : "jne", in.arg1);
         break;
 
       default: {
-        fprintf(out, "\tmovq -%d(%%rbp), %%r10\n", a);
+        int b = 0;
+        if (in.op != INS_NEG_REG && in.op != INS_NOT_REG && in.op != INS_NOTReg)
+          b = f->numRBP[in.arg2];
+        fprintf(out, "\tmovq -%d(%%rbp), %%r10\n", f->numRBP[in.arg1]);
         const char *cc = NULL;
         switch (in.op) {
         case INS_SUMA_REG:
-          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\taddq %%r11, %%r10\n", b);
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n", b);
+          fprintf(out, "\taddq %%r11, %%r10\n");
           break;
         case INS_RESTA_REG:
-          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\tsubq %%r11, %%r10\n", b);
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n", b);
+          fprintf(out, "\tsubq %%r11, %%r10\n");
           break;
         case INS_MUL_REG:
-          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\timulq %%r11, %%r10\n", b);
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n", b);
+          fprintf(out, "\timulq %%r11, %%r10\n");
           break;
         case INS_DIV_REG:
         case INS_MOD_REG:
-          // idivq divide %rdx:%rax por el divisor; cociente en %rax, resto en %rdx
-          fprintf(out, "\tmovq %%r10, %%rax\n\tcqto\n\tidivq -%d(%%rbp)\n", b);
+          fprintf(out, "\tmovq %%r10, %%rax\n");
+          fprintf(out, "\tcqto\n");
+          fprintf(out, "\tidivq -%d(%%rbp)\n", b);
           fprintf(out, "\tmovq %s, %%r10\n", in.op == INS_MOD_REG ? "%rdx" : "%rax");
           break;
         case INS_NEG_REG:
@@ -397,14 +312,17 @@ static void asmEmit(FILE *out, AsmProgram *p) {
           break;
         case INS_NOT_REG:
         case INS_NOTReg:
-          fprintf(out, "\tmovq $0, %%r11\n\tcmpq %%r11, %%r10\n"
-                       "\tmovq $0, %%r11\n\tmovq $1, %%r10\n\tcmove %%r10, %%r11\n"
-                       "\tmovq %%r11, %%r10\n");
+          fprintf(out, "\tmovq $0, %%r11\n");
+          fprintf(out, "\tcmpq %%r11, %%r10\n");
+          fprintf(out, "\tmovq $0, %%r11\n");
+          fprintf(out, "\tmovq $1, %%r10\n");
+          fprintf(out, "\tcmove %%r10, %%r11\n");
+          fprintf(out, "\tmovq %%r11, %%r10\n");
           break;
         case INS_AND_REG:
         case INS_OR_REG:
-          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\t%s %%r11, %%r10\n",
-                  b, in.op == INS_AND_REG ? "andq" : "orq");
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n", b);
+          fprintf(out, "\t%s %%r11, %%r10\n", in.op == INS_AND_REG ? "andq" : "orq");
           break;
         case INS_COMP_REG:       cc = "e";  break;
         case INS_NOIGUAL_REG:    cc = "ne"; break;
@@ -415,25 +333,29 @@ static void asmEmit(FILE *out, AsmProgram *p) {
         default: break;
         }
         if (cc != NULL) {
-          // Esquema exacto de la guía con %r10, %r11 y cmov*
-          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n\tcmpq %%r11, %%r10\n"
-                       "\tmovq $0, %%r11\n\tmovq $1, %%r10\n"
-                       "\tcmov%s %%r10, %%r11\n\tmovq %%r11, %%r10\n", b, cc);
+          fprintf(out, "\tmovq -%d(%%rbp), %%r11\n", b);
+          fprintf(out, "\tcmpq %%r11, %%r10\n");
+          fprintf(out, "\tmovq $0, %%r11\n");
+          fprintf(out, "\tmovq $1, %%r10\n");
+          fprintf(out, "\tcmov%s %%r10, %%r11\n", cc);
+          fprintf(out, "\tmovq %%r11, %%r10\n");
         }
-        fprintf(out, "\tmovq %%r10, -%d(%%rbp)\n", r);
+        fprintf(out, "\tmovq %%r10, -%d(%%rbp)\n", f->numRBP[in.res]);
         break;
       }
       }
     }
-    fprintf(out, ".Lcg_return_%d:\n\tleave\n\tret\n.size %s, .-%s\n", n, name, name);
+    fprintf(out, ".Lcg_return_%d:\n", n);
+    fprintf(out, "\tleave\n");
+    fprintf(out, "\tret\n");
   }
   fprintf(out, ".section .note.GNU-stack,\"\",@progbits\n");
 }
 
-int generarAssembly(Nodo *root, const char *archivo) {
+int generarAssembly(Nodo *raiz, const char *archivo) {
   AsmProgram *program = calloc(1, sizeof(*program));
   if (program == NULL) return asmError("no se pudo reservar memoria");
-  if (!asmPlan(program, root)) {
+  if (!asmPlan(program, raiz)) {
     free(program);
     return 0;
   }
