@@ -1,0 +1,14 @@
+int main() {
+    int x;
+    int y;
+    x = (2 + 3) * 4 - 0;
+    y = x * 1 + 0;
+
+    if (10 > 5 && true) {
+        y = y + (8 / 2);
+    } else {
+        y = 999;
+    }
+
+    return y;
+}
