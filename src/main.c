@@ -2,6 +2,7 @@
 #include "assembler.h"
 #include "codigoIntermedio.h"
 #include "interprete.h"
+#include "optimizador.h"
 #include "semantico.h"
 #include "tablaSimbolos.h"
 #include <stdio.h>
@@ -80,6 +81,8 @@ int main(int argc, char **argv) {
   if (hayErrores)
     return abortar();
   printf("Sin errores semanticos.\n");
+
+  optimizarArbol(raiz);
 
   printf("\n--- ARBOL ANOTADO ---\n");
   imprimirArbol(raiz, 0);
