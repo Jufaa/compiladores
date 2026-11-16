@@ -1,0 +1,18 @@
+int comparar(int a, int b) {
+    int puntos;
+    puntos = 0;
+    if (a < b) { puntos = puntos + 1; }
+    if (b > a) { puntos = puntos + 1; }
+    if (a <= a) { puntos = puntos + 1; }
+    if (b >= b) { puntos = puntos + 1; }
+    if (a == a) { puntos = puntos + 1; }
+    if (a != b) { puntos = puntos + 1; }
+    return puntos;
+}
+
+int main() {
+    return comparar(3, 8);
+}
+
+// Esperado: 6
+// Devuelve: 6

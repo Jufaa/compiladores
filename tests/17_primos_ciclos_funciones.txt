@@ -1,0 +1,30 @@
+boolean esPrimo(int n) {
+    int divisor;
+    if (n < 2) {
+        return false;
+    }
+    divisor = 2;
+    while (divisor * divisor <= n) {
+        if (n % divisor == 0) {
+            return false;
+        }
+        divisor = divisor + 1;
+    }
+    return true;
+}
+
+int main() {
+    int n, suma;
+    n = 1;
+    suma = 0;
+    while (n <= 10) {
+        if (esPrimo(n)) {
+            suma = suma + n;
+        }
+        n = n + 1;
+    }
+    return suma;
+}
+
+// Esperado: 17
+// Devuelve: 17

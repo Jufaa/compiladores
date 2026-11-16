@@ -1,0 +1,28 @@
+int globalRes;
+
+int sumarHasta(int limite) {
+    int i;
+    int acum;
+    i = 1;
+    acum = 0;
+    while (i <= limite) {
+        acum = acum + i;
+        if (acum > 10) {
+            return acum;
+        }
+        i = i + 1;
+    }
+    return acum;
+}
+
+int main() {
+    int a;
+    int b;
+    a = sumarHasta(4);
+    b = sumarHasta(10);
+    globalRes = a + b;
+    return globalRes;
+}
+
+// Esperado: 25
+// Devuelve: 25

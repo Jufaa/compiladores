@@ -1,7 +1,8 @@
 #   make          compila (solo lo que cambio)
-#   make test     compila y corre tests/prueba.txt
+#   make test     compila y corre tests/interprete2.txt
 #   make clean    borra todo lo generado
 #   make run ARCHIVO=tests/otro.txt
+#   make asm ARCHIVO=tests/otro.txt  genera, muestra y ejecuta assembly
 
 CC     = gcc
 CFLAGS = -Wall -Isrc -Ibuild
@@ -11,7 +12,7 @@ BUILD = build
 BIN   = compilador
 
 # Modulos propios: uno por cada .c de src/
-MODULOS = ast tablaSimbolos semantico interprete codigoIntermedio main
+MODULOS = ast tablaSimbolos semantico interprete codigoIntermedio optimizador assembler main
 
 # Objetos: los modulos propios mas los dos generados
 OBJETOS = $(MODULOS:%=$(BUILD)/%.o) $(BUILD)/bison.tab.o $(BUILD)/flex.o
@@ -41,17 +42,26 @@ $(BUILD):
 	mkdir -p $(BUILD)
 
 # --- Utilidades ---
-ARCHIVO ?= tests/prueba.txt
+ARCHIVO ?= tests/interprete2.txt
 
-# El guion inicial: prueba.txt tiene errores a proposito, y el compilador
-# devuelve codigo != 0. Sin el guion, make lo tomaria como fallo del build.
 test: $(BIN)
-	-./$(BIN) $(ARCHIVO)
+	./$(BIN) "$(ARCHIVO)"
 
 run: $(BIN)
 	./$(BIN) $(ARCHIVO)
 
+# Un main que devuelve, por ejemplo, 120 no es un fallo de compilacion.
+# Se informa su codigo de salida sin hacer fallar make por ese valor.
+asm: ARCHIVO = tests/interprete2.txt
+asm: $(BIN) | $(BUILD)
+	./$(BIN) "$(ARCHIVO)" --asm "$(BUILD)/programa.s"
+	@printf '\n--- ASSEMBLER ---\n'
+	@cat "$(BUILD)/programa.s"
+	$(CC) "$(BUILD)/programa.s" -o "$(BUILD)/programa"
+	@printf '\n--- EJECUCION ASSEMBLER ---\n'
+	@./$(BUILD)/programa; resultado=$$?; printf 'Codigo de salida del programa: %s\n' "$$resultado"
+
 clean:
 	rm -rf $(BUILD) $(BIN)
 
-.PHONY: test run clean
+.PHONY: test run asm clean

@@ -1,0 +1,16 @@
+int buscar(int limite) {
+    int i;
+    i = 0;
+    while (i < limite) {
+        if (i == 3) { return i * 2; }
+        i = i + 1;
+    }
+    return 99;
+}
+
+int main() {
+    return buscar(10);
+}
+
+// Esperado: 6
+// Devuelve: 6

@@ -1,0 +1,16 @@
+boolean combinar(boolean a, boolean b) {
+    return (a && !b) || false;
+}
+
+int main() {
+    boolean resultado;
+    resultado = combinar(true, false);
+    if (resultado) {
+        return 7;
+    } else {
+        return 99;
+    }
+}
+
+// Esperado: 7
+// Devuelve: 7

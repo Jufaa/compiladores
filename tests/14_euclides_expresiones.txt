@@ -1,0 +1,22 @@
+int absoluto(int n) {
+    if (n < 0) {
+        return -n;
+    }
+    return n;
+}
+
+int mcd(int a, int b) {
+    if (b == 0) {
+        return a;
+    }
+    return mcd(b, a % b);
+}
+
+int main() {
+    int resultado;
+    resultado = mcd(absoluto(-48), 18) * mcd(35, 14);
+    return resultado + absoluto(-8) / 2;
+}
+
+// Esperado: 46
+// Devuelve: 46

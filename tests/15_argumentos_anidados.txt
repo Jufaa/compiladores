@@ -1,0 +1,16 @@
+int doble(int n) {
+    return n * 2;
+}
+
+int ponderar(int a, int b, int c, int d, int e, int f, int g) {
+    return a + b * 2 + c * 3 + d * 4 + e * 5 + f * 6 + g * 7;
+}
+
+int main() {
+    int resultado;
+    resultado = ponderar(doble(1), doble(2), doble(3), doble(4), doble(5), doble(6), doble(7));
+    return resultado / 2;
+}
+
+// Esperado: 140
+// Devuelve: 140

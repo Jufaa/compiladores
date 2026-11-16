@@ -1,0 +1,18 @@
+int main() {
+    int i, j, suma;
+    i = 0;
+    suma = 0;
+    while (i < 3) {
+        j = 0;
+        while (j < 2) {
+            suma = suma + i + j;
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    while (false) { suma = 99; }
+    return suma * 2;
+}
+
+// Esperado: 18
+// Devuelve: 18
