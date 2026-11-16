@@ -1,0 +1,20 @@
+int contador;
+
+void agregar(int cantidad) {
+    contador = contador + cantidad;
+    return;
+}
+
+void iniciar() {
+    contador = 1;
+}
+
+int main() {
+    iniciar();
+    agregar(4);
+    agregar(6);
+    return contador;
+}
+
+// Esperado: 11
+// Devuelve: 11

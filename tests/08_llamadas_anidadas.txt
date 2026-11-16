@@ -1,0 +1,14 @@
+int doble(int x) {
+    return x * 2;
+}
+
+int sumar(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    return 1 + sumar(doble(3), sumar(doble(4), doble(3)));
+}
+
+// Esperado: 21
+// Devuelve: 21

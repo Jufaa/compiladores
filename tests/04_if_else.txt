@@ -1,0 +1,15 @@
+int elegir(int x) {
+    if (x > 0) {
+        if (x == 2) { return 5; }
+        return 99;
+    } else {
+        return 7;
+    }
+}
+
+int main() {
+    return elegir(2) + elegir(0);
+}
+
+// Esperado: 12
+// Devuelve: 12

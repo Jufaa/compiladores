@@ -8,7 +8,7 @@ int sumarHasta(int limite) {
     while (i <= limite) {
         acum = acum + i;
         if (acum > 10) {
-            return acum; // Corta el while y la funcion antes de terminar
+            return acum;
         }
         i = i + 1;
     }
@@ -18,8 +18,11 @@ int sumarHasta(int limite) {
 int main() {
     int a;
     int b;
-    a = sumarHasta(4);  // 1 + 2 + 3 + 4 = 10
-    b = sumarHasta(10); // 1 + 2 + 3 + 4 + 5 = 15 (corta en el if porque 15 > 10)
-    globalRes = a + b;  // 10 + 15 = 25
+    a = sumarHasta(4);
+    b = sumarHasta(10);
+    globalRes = a + b;
     return globalRes;
 }
+
+// Esperado: 25
+// Devuelve: 25

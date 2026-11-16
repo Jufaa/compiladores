@@ -1,0 +1,26 @@
+int llamadas;
+
+int acumular(int n) {
+    int actual;
+    llamadas = llamadas + 1;
+    actual = n;
+    if (n == 0) {
+        return 0;
+    }
+    return actual + acumular(n - 1);
+}
+
+int main() {
+    int total;
+    llamadas = 0;
+    total = acumular(4);
+    {
+        int llamadas;
+        llamadas = 7;
+        total = total + llamadas;
+    }
+    return total + llamadas;
+}
+
+// Esperado: 22
+// Devuelve: 22

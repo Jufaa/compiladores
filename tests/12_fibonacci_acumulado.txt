@@ -1,0 +1,23 @@
+int fibonacci(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+int main() {
+    int i, total;
+    boolean continuar;
+    i = 0;
+    total = 0;
+    continuar = true;
+    while (continuar) {
+        total = total + fibonacci(i);
+        i = i + 1;
+        continuar = i <= 6 && !(i < 0);
+    }
+    return total;
+}
+
+// Esperado: 20
+// Devuelve: 20

@@ -1,0 +1,12 @@
+int calcular(int a, int b) {
+    int resultado;
+    resultado = (a + b) * 3 - a / b + a % b;
+    return resultado + (-b);
+}
+
+int main() {
+    return calcular(7, 2);
+}
+
+// Esperado: 23
+// Devuelve: 23

@@ -12,3 +12,6 @@ int main() {
 
     return y;
 }
+
+// Esperado: 24
+// Devuelve: 24

@@ -1,0 +1,21 @@
+int x;
+
+int main() {
+    int resultado;
+    x = 2;
+    resultado = 0;
+    {
+        int x;
+        x = 10;
+        resultado = resultado + x;
+        {
+            int x;
+            x = 20;
+            resultado = resultado + x;
+        }
+    }
+    return resultado + x;
+}
+
+// Esperado: 32
+// Devuelve: 32
