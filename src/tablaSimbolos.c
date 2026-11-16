@@ -185,25 +185,21 @@ Simbolo *buscarSimbolo(char *nombre) {
 void imprimirTabla(void) {
     printf("\n--- TABLA DE SIMBOLOS ---\n");
 
-    TS *nivelActual = pila;
-
-    while (nivelActual != NULL) {
-
-        printf("\nNivel %d:\n", nivelActual->nivel);
-
-        Simbolo *simboloActual = nivelActual->simbolos;
-
-        while (simboloActual != NULL) {
-
-            printf("[%d] %-8s : %-4s = %d\n",
-                   simboloActual->linea,
-                   simboloActual->nombre,
-                   nombreTipo(simboloActual->tipoDato),
-                   simboloActual->valor);
-
-            simboloActual = simboloActual->sig;
+    TS *listas[2] = {pila, nivelesCerrados};
+    for (int k = 0; k < 2; k++) {
+        TS *nivelActual = listas[k];
+        while (nivelActual != NULL) {
+            printf("\nNivel %d:\n", nivelActual->nivel);
+            Simbolo *simboloActual = nivelActual->simbolos;
+            while (simboloActual != NULL) {
+                printf("[%d] %-8s : %-4s = %d\n",
+                       simboloActual->linea,
+                       simboloActual->nombre,
+                       nombreTipo(simboloActual->tipoDato),
+                       simboloActual->valor);
+                simboloActual = simboloActual->sig;
+            }
+            nivelActual = nivelActual->sig;
         }
-
-        nivelActual = nivelActual->sig;
     }
 }

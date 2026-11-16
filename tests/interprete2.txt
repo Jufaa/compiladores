@@ -1,0 +1,25 @@
+int globalRes;
+
+int sumarHasta(int limite) {
+    int i;
+    int acum;
+    i = 1;
+    acum = 0;
+    while (i <= limite) {
+        acum = acum + i;
+        if (acum > 10) {
+            return acum; // Corta el while y la funcion antes de terminar
+        }
+        i = i + 1;
+    }
+    return acum;
+}
+
+int main() {
+    int a;
+    int b;
+    a = sumarHasta(4);  // 1 + 2 + 3 + 4 = 10
+    b = sumarHasta(10); // 1 + 2 + 3 + 4 + 5 = 15 (corta en el if porque 15 > 10)
+    globalRes = a + b;  // 10 + 15 = 25
+    return globalRes;
+}

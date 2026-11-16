@@ -87,10 +87,11 @@ int main(int argc, char **argv) {
   printf("\n--- ARBOL ANOTADO ---\n");
   imprimirArbol(raiz, 0);
 
-  if (assembly == NULL)
-    evaluar(raiz);
+  if (assembly == NULL){
+    int res = evaluar(raiz);
+    printf("\n--- INTERPRETE ---\nRetorno de main: %d\n", res);
+  }
   imprimirTabla();
-
   if (!generarCodigo(raiz)) {
     return abortar();
   }
