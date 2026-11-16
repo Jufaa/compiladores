@@ -66,7 +66,6 @@ void cerrarNivel() {
     TS *nivelActual = pila;
     pila = pila->sig;
 
-    // Closed scopes are invisible, but AST nodes still reference their symbols.
     nivelActual->sig = nivelesCerrados;
     nivelesCerrados = nivelActual;
 }

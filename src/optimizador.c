@@ -50,7 +50,6 @@ static void transformarEnFloat(Nodo *nodo, float valor) {
 void optimizarArbol(Nodo *nodo) {
   if (nodo == NULL) return;
 
-  // optimización recursiva de los hijos (post-orden)
   optimizarArbol(nodo->izq);
   optimizarArbol(nodo->der);
 
@@ -59,14 +58,13 @@ void optimizarArbol(Nodo *nodo) {
 
   switch (nodo->tipoNodo) {
 
-  // --- OPERADORES UNARIOS ---
   case N_NEG:
     if (izq->tipoNodo == N_NUM && izq->valor != INT_MIN) {
       transformarEnNum(nodo, -izq->valor);
     } else if (izq->tipoNodo == N_FLOAT) {
       transformarEnFloat(nodo, -izq->valorFloat);
     } else if (izq->tipoNodo == N_NEG) {
-      // Doble negación
+      // Doble negacion
       reemplazarPorHijo(nodo, izq->izq, NULL);
       free(izq);
     }
@@ -76,13 +74,13 @@ void optimizarArbol(Nodo *nodo) {
     if (izq->tipoNodo == N_BOOL) {
       transformarEnBool(nodo, !izq->valor);
     } else if (izq->tipoNodo == N_NOT) {
-      // Doble negación lógica: !(!x) -> x
+      // Doble negación lpgica: !(!x) -> x
       reemplazarPorHijo(nodo, izq->izq, NULL);
       free(izq);
     }
     break;
 
-  // --- OPERADORES ARITMÉTICOS ---
+  // --- OPERADORES ARITMETICOS ---
   case N_SUMA:
     if (izq->tipoNodo == N_NUM && der->tipoNodo == N_NUM) {
       int a = izq->valor, b = der->valor;
@@ -144,7 +142,7 @@ void optimizarArbol(Nodo *nodo) {
     }
     break;
 
-  // --- OPERADORES DE COMPARACIÓN ---
+  // --- OPERADORES DE COMPARACION ---
   case N_COMPARACION:
   case N_NOIGUAL:
     if ((izq->tipoNodo == N_NUM && der->tipoNodo == N_NUM) ||
@@ -179,7 +177,7 @@ void optimizarArbol(Nodo *nodo) {
     }
     break;
 
-  // --- OPERADORES LÓGICOS ---
+  // --- OPERADORES LOGICOS ---
   case N_AND:
     if (izq->tipoNodo == N_BOOL && der->tipoNodo == N_BOOL) {
       transformarEnBool(nodo, izq->valor && der->valor);
@@ -202,7 +200,7 @@ void optimizarArbol(Nodo *nodo) {
     }
     break;
 
-  // --- ELIMINACIÓN DE CÓDIGO MUERTO EN CONTROL DE FLUJO ---
+  // --- ELIMINACION DE CODIGO MUERTO ---
   case N_IF:
     if (izq->tipoNodo == N_BOOL) {
       if (izq->valor == 1) {
